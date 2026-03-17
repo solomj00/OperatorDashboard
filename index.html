@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Garage 3 — Rating 2 Pre-Rating Snapshot</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f4f0;
+      color: #1a1a18;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    .dash {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .hdr {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 0.5px solid rgba(0,0,0,0.15);
+    }
+    .hdr h2 { font-size: 18px; font-weight: 500; margin-bottom: 3px; }
+    .hdr p  { font-size: 12px; color: #5f5e5a; }
+
+    /* ── Section label ── */
+    .sl {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: #888780;
+      margin: 0 0 10px;
+    }
+
+    /* ── Pills ── */
+    .pill {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 9px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+    .pr { background: #FCEBEB; color: #A32D2D; }
+    .pg { background: #EAF3DE; color: #3B6D11; }
+    .pa { background: #FAEEDA; color: #854F0B; }
+    .pb { background: #E6F1FB; color: #185FA5; }
+
+    /* ── Day cards ── */
+    .day-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 1.5rem;
+    }
+    .day-card {
+      border-radius: 10px;
+      padding: 14px 10px;
+      text-align: center;
+      border: 0.5px solid rgba(0,0,0,0.12);
+      background: #ffffff;
+    }
+    .day-card.risk     { border-color: #F7C1C1; background: #FCEBEB; }
+    .day-card.marginal { border-color: #FAC775; background: #FAEEDA; }
+
+    .day-name { font-size: 11px; font-weight: 500; margin-bottom: 8px; color: #5f5e5a; }
+    .day-card.risk     .day-name { color: #993C1D; }
+    .day-card.marginal .day-name { color: #854F0B; }
+
+    .day-ratio { font-size: 28px; font-weight: 500; line-height: 1; margin-bottom: 3px; }
+    .ratio-green { color: #3B6D11; }
+    .ratio-amber { color: #854F0B; }
+    .ratio-red   { color: #A32D2D; }
+
+    .day-abs-lbl { font-size: 10px; color: #5f5e5a; margin-bottom: 10px; }
+    .day-card.risk     .day-abs-lbl { color: #993C1D; opacity: 0.8; }
+    .day-card.marginal .day-abs-lbl { color: #854F0B; opacity: 0.8; }
+
+    .day-divider { height: 0.5px; background: rgba(0,0,0,0.12); margin: 0 0 10px; }
+    .day-card.risk     .day-divider { background: #F7C1C1; }
+    .day-card.marginal .day-divider { background: #FAC775; }
+
+    .day-stat-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; }
+    .day-stat-lbl { color: #5f5e5a; }
+    .day-card.risk     .day-stat-lbl { color: #993C1D; opacity: 0.75; }
+    .day-card.marginal .day-stat-lbl { color: #854F0B; opacity: 0.75; }
+    .day-stat-val { font-weight: 500; color: #1a1a18; }
+    .day-card.risk     .day-stat-val { color: #A32D2D; }
+    .day-card.marginal .day-stat-val { color: #854F0B; }
+
+    .day-status { margin-top: 10px; }
+
+    /* ── Table ── */
+    .tbl { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 1.5rem; }
+    .tbl th {
+      text-align: right;
+      font-size: 10px;
+      font-weight: 500;
+      color: #5f5e5a;
+      padding: 5px 8px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.15);
+      letter-spacing: 0.04em;
+    }
+    .tbl th:first-child { text-align: left; }
+    .tbl td {
+      text-align: right;
+      padding: 7px 8px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.10);
+      color: #1a1a18;
+    }
+    .tbl td:first-child { text-align: left; font-weight: 500; }
+    .tbl tr:last-child td { border-bottom: none; }
+
+    /* ── Two-column layout ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } .day-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    /* ── Cards ── */
+    .card {
+      background: #ffffff;
+      border: 0.5px solid rgba(0,0,0,0.12);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .peak-wrap { position: relative; width: 100%; height: 140px; }
+
+    /* ── Hiring pipeline ── */
+    .class-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 0.5px solid rgba(0,0,0,0.10);
+      font-size: 12px;
+    }
+    .class-row:last-child { border-bottom: none; }
+    .class-label { font-weight: 500; color: #1a1a18; }
+    .class-sub   { font-size: 11px; color: #5f5e5a; }
+    .class-count { font-size: 20px; font-weight: 500; color: #1a1a18; }
+    .class-count-lbl { font-size: 10px; color: #5f5e5a; text-align: right; }
+
+    /* ── Service changes ── */
+    .svc-row { padding: 10px 0; border-bottom: 0.5px solid rgba(0,0,0,0.10); font-size: 12px; }
+    .svc-row:last-child { border-bottom: none; }
+    .svc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 8px; }
+    .svc-name { font-weight: 500; color: #1a1a18; }
+    .svc-meta { font-size: 11px; color: #5f5e5a; margin-bottom: 4px; }
+    .svc-desc { font-size: 11px; color: #5f5e5a; line-height: 1.5; }
+  </style>
+</head>
+<body>
+<div class="dash">
+
+  <div class="hdr">
+    <h2>Garage 3 — Rating 2 Pre-Rating Snapshot</h2>
+    <p>Spring 2025 &nbsp;·&nbsp; Apr 28 – Aug 18 &nbsp;·&nbsp; Superintendent review</p>
+  </div>
+
+  <p class="sl">Planned coverage — typical week</p>
+  <div class="day-grid" id="dayGrid"></div>
+
+  <p class="sl">Full planning detail — typical week</p>
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Day</th>
+        <th>Required ops</th>
+        <th>List</th>
+        <th>Absence rate</th>
+        <th>Coverage ratio</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="detailBody"></tbody>
+  </table>
+
+  <div class="two-col">
+    <div class="card">
+      <p class="sl">AM / PM peak buses — typical week</p>
+      <div class="peak-wrap"><canvas id="peakChart"></canvas></div>
+    </div>
+    <div class="card">
+      <p class="sl">Operators in hiring pipeline</p>
+      <div id="classList"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="sl">Service changes effective this rating</p>
+    <div id="svcList"></div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+  /* ─────────────────────────────────────────
+     DATA — replace with real inputs
+  ───────────────────────────────────────── */
+  const days = [
+    { day:'Mon', required:45, list:56, absRate:0.10 },
+    { day:'Tue', required:44, list:55, absRate:0.10 },
+    { day:'Wed', required:44, list:55, absRate:0.10 },
+    { day:'Thu', required:48, list:55, absRate:0.12 },
+    { day:'Fri', required:62, list:65, absRate:0.15 },
+    { day:'Sat', required:36, list:45, absRate:0.11 },
+    { day:'Sun', required:26, list:34, absRate:0.09 },
+  ];
+
+  const peakData = [
+    { day:'Mon', amPeak:42, pmPeak:44 },
+    { day:'Tue', amPeak:40, pmPeak:43 },
+    { day:'Wed', amPeak:40, pmPeak:43 },
+    { day:'Thu', amPeak:45, pmPeak:47 },
+    { day:'Fri', amPeak:56, pmPeak:60 },
+    { day:'Sat', amPeak:30, pmPeak:34 },
+    { day:'Sun', amPeak:22, pmPeak:25 },
+  ];
+
+  const hiringClasses = [
+    { label:'Class Jan 2025', ops:3, sub:'Graduating Jun 2 – Jun 9' },
+    { label:'Class Mar 2025', ops:2, sub:'Graduating Jun 30' },
+    { label:'Class May 2025', ops:2, sub:'Graduating Jul 7 – Jul 14' },
+  ];
+
+  const serviceChanges = [
+    {
+      name:   'Route 42 — Extended service',
+      meta:   '+3 operators Mon–Fri · Effective Apr 28',
+      desc:   'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Service extension adds weekday trips through the Harbor district, increasing peak pull-out requirements beginning the first week of the rating.',
+      impact: 'pr', label: 'High impact'
+    },
+    {
+      name:   'Route 15 — Frequency increase',
+      meta:   '+1 operator Mon–Sat · Effective May 5',
+      desc:   'Sed do eiusmod tempor incididunt ut labore. Headway reduced from 20 to 15 minutes on the core corridor, adding one additional operator requirement across six days per week.',
+      impact: 'pa', label: 'Med impact'
+    },
+    {
+      name:   'Route 8 — Reroute via Harbor Blvd',
+      meta:   'No headcount change · Retraining required',
+      desc:   'Ut enim ad minim veniam, quis nostrud exercitation. Path change does not alter run count but operators assigned to this route will require familiarity with the revised alignment before pullout.',
+      impact: 'pg', label: 'Low impact'
+    },
+  ];
+
+  /* ─────────────────────────────────────────
+     HELPERS
+  ───────────────────────────────────────── */
+  function calcDay(d) {
+    d.effective = d.list * (1 - d.absRate);
+    d.ratio     = d.effective / d.required;
+    return d;
+  }
+  function rColor(r) { return r >= 1.05 ? '#639922' : r >= 1.00 ? '#BA7517' : '#A32D2D'; }
+  function rKey(r)   { return r >= 1.05 ? 'green'   : r >= 1.00 ? 'amber'   : 'red'; }
+  function rLabel(r) { return r >= 1.05 ? 'Safe'    : r >= 1.00 ? 'Marginal': 'At risk'; }
+  function pillClass(r) { return r >= 1.05 ? 'pg' : r >= 1.00 ? 'pa' : 'pr'; }
+  function cardClass(r) { return r >= 1.05 ? '' : r >= 1.00 ? 'marginal' : 'risk'; }
+
+  days.forEach(calcDay);
+
+  /* ─────────────────────────────────────────
+     DAY CARDS
+  ───────────────────────────────────────── */
+  const grid = document.getElementById('dayGrid');
+  days.forEach(d => {
+    const rk = rKey(d.ratio);
+    const cc = cardClass(d.ratio);
+    grid.innerHTML += `
+      <div class="day-card ${cc}">
+        <div class="day-name">${d.day}</div>
+        <div class="day-ratio ratio-${rk}">${d.ratio.toFixed(2)}</div>
+        <div class="day-abs-lbl">${Math.round(d.absRate * 100)}% absence</div>
+        <div class="day-divider"></div>
+        <div class="day-stat-row">
+          <span class="day-stat-lbl">Need</span>
+          <span class="day-stat-val">${d.required}</span>
+        </div>
+        <div class="day-stat-row">
+          <span class="day-stat-lbl">List</span>
+          <span class="day-stat-val">${d.list}</span>
+        </div>
+        <div class="day-status">
+          <span class="pill ${pillClass(d.ratio)}">${rLabel(d.ratio)}</span>
+        </div>
+      </div>`;
+  });
+
+  /* ─────────────────────────────────────────
+     DETAIL TABLE
+  ───────────────────────────────────────── */
+  const tbody = document.getElementById('detailBody');
+  days.forEach(d => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${d.day}</td>
+        <td>${d.required}</td>
+        <td>${d.list}</td>
+        <td>${Math.round(d.absRate * 100)}%</td>
+        <td style="font-weight:500; color:${rColor(d.ratio)};">${d.ratio.toFixed(2)}</td>
+        <td><span class="pill ${pillClass(d.ratio)}">${rLabel(d.ratio)}</span></td>
+      </tr>`;
+  });
+
+  /* ─────────────────────────────────────────
+     PEAK CHART
+  ───────────────────────────────────────── */
+  new Chart(document.getElementById('peakChart'), {
+    type: 'bar',
+    data: {
+      labels: peakData.map(d => d.day),
+      datasets: [
+        { label:'AM peak', data: peakData.map(d => d.amPeak), backgroundColor:'#378ADD', borderRadius:3, barThickness:14 },
+        { label:'PM peak', data: peakData.map(d => d.pmPeak), backgroundColor:'#534AB7', borderRadius:3, barThickness:14 },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y} buses` } }
+      },
+      scales: {
+        y: { ticks: { font:{ size:10 } }, grid: { color:'rgba(0,0,0,0.06)' } },
+        x: { ticks: { font:{ size:11 } }, grid: { display:false } }
+      }
+    }
+  });
+
+  /* ─────────────────────────────────────────
+     HIRING PIPELINE
+  ───────────────────────────────────────── */
+  const cl = document.getElementById('classList');
+  hiringClasses.forEach(c => {
+    cl.innerHTML += `
+      <div class="class-row">
+        <div>
+          <div class="class-label">${c.label}</div>
+          <div class="class-sub">${c.sub}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="class-count">${c.ops}</div>
+          <div class="class-count-lbl">operators</div>
+        </div>
+      </div>`;
+  });
+
+  /* ─────────────────────────────────────────
+     SERVICE CHANGES
+  ───────────────────────────────────────── */
+  const sl = document.getElementById('svcList');
+  serviceChanges.forEach(s => {
+    sl.innerHTML += `
+      <div class="svc-row">
+        <div class="svc-header">
+          <span class="svc-name">${s.name}</span>
+          <span class="pill ${s.impact}">${s.label}</span>
+        </div>
+        <div class="svc-meta">${s.meta}</div>
+        <div class="svc-desc">${s.desc}</div>
+      </div>`;
+  });
+</script>
+</body>
+</html>
