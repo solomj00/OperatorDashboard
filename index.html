@@ -3,205 +3,214 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pre-Rating Snapshot - Restored Version</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-  
+  <title>Pre-Rating Snapshot Dashboard</title>
   <style>
     :root {
-      --bg-page: #f8f8f6;
-      --text-main: #000000;
-      --text-muted: #444444;
-      --border: #cccccc;
+      --bg-page: #f5f4f0;
+      --bg-card: #ffffff;
+      --text-main: #1a1a18;
+      --text-muted: #5f5e5a;
+      --border-light: rgba(0,0,0,0.12);
+      
+      /* Status Colors */
+      --safe-bg: #EAF3DE; --safe-text: #3B6D11; --safe-border: #C6DBAF;
+      --warn-bg: #FAEEDA; --warn-text: #854F0B; --warn-border: #FAC775;
+      --risk-bg: #FCEBEB; --risk-text: #A32D2D; --risk-border: #F7C1C1;
+      
+      --primary: #378ADD;
+      --secondary: #534AB7;
     }
 
-    @page { size: letter portrait; margin: 0.4in; }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg-page); color: var(--text-main); padding: 2rem; min-height: 100vh; }
+    .dash { max-width: 1000px; margin: 0 auto; }
+
+    /* Header & Select */
+    .hdr { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .hdr h2 { font-size: 20px; font-weight: 600; }
+    .garage-select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-light); font-size: 14px; cursor: pointer; }
+
+    /* Grid Layouts */
+    .day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    @media (max-width: 800px) { .day-grid { grid-template-columns: repeat(4, 1fr); } .two-col { grid-template-columns: 1fr; } }
+
+    /* Components */
+    .sl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 12px; }
+    .card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 12px; padding: 1.25rem; }
     
-    body { font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg-page); color: var(--text-main); font-size: 10pt; }
-    .dash { max-width: 7.7in; margin: 0 auto; padding: 10px; }
+    /* Day Cards Status Styling */
+    .day-card { border-radius: 10px; padding: 15px 10px; text-align: center; border: 1px solid var(--border-light); background: var(--bg-card); transition: transform 0.2s; }
+    .day-card.safe { border-color: var(--safe-border); }
+    .day-card.marginal { background: var(--warn-bg); border-color: var(--warn-border); }
+    .day-card.risk { background: var(--risk-bg); border-color: var(--risk-border); }
 
-    /* UI Controls */
-    .controls { background: #333; color: white; padding: 12px; margin-bottom: 15px; border-radius: 8px; display: flex; gap: 15px; align-items: center; }
-    .btn-print { background: #2ecc71; color: white; border: none; padding: 6px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .day-ratio { font-size: 24px; font-weight: 700; margin: 5px 0; }
+    .day-card.safe .day-ratio { color: var(--safe-text); }
+    .day-card.marginal .day-ratio { color: var(--warn-text); }
+    .day-card.risk .day-ratio { color: var(--risk-text); }
 
-    /* Header */
-    .hdr { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2pt solid #000; padding-bottom: 5px; margin-bottom: 12px; }
-    .hdr h2 { font-size: 17pt; font-weight: 800; text-transform: uppercase; }
-    
-    .section-title { font-size: 8.5pt; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; border-left: 4px solid #000; padding-left: 8px; }
-
-    /* Day Cards */
-    .day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 15px; }
-    .day-card { border: 1pt solid var(--border); background: #fff; padding: 8px 4px; text-align: center; border-radius: 6px; }
-    .day-ratio { font-size: 15pt; font-weight: 800; display: block; line-height: 1.1; }
-    .day-stats { font-size: 7.5pt; margin-top: 4px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 4px; line-height: 1.2; }
-
-    /* Layout */
-    .two-col { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 12px; margin-bottom: 12px; }
-    .card { background: #fff; border: 1pt solid var(--border); border-radius: 8px; padding: 12px; }
+    .pill { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-top: 8px; }
+    .pill.pg { background: var(--safe-bg); color: var(--safe-text); }
+    .pill.pa { background: #fff; color: var(--warn-text); border: 1px solid var(--warn-border); }
+    .pill.pr { background: #fff; color: var(--risk-text); border: 1px solid var(--risk-border); }
 
     canvas { width: 100% !important; height: 180px !important; }
-
-    /* Service Changes */
-    .svc-row { padding: 6px 0; border-bottom: 0.5pt solid #eee; font-size: 8.5pt; }
+    
+    .svc-row { padding: 12px 0; border-bottom: 1px solid var(--border-light); }
     .svc-row:last-child { border-bottom: none; }
-    .svc-name { font-weight: 700; display: flex; justify-content: space-between; }
-    .svc-impact { font-size: 7pt; padding: 1px 5px; border-radius: 10px; text-transform: uppercase; }
-
-    /* Legend */
-    .legend { display: flex; gap: 15px; font-size: 8pt; justify-content: center; font-weight: 600; margin-top: 5px; }
-    .legend-item { display: flex; align-items: center; gap: 4px; }
-    .box { width: 10px; height: 10px; border: 0.5pt solid #000; }
-
-    @media print {
-      .controls { display: none !important; }
-      body { background: white; }
-      .day-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    }
+    .svc-name { font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
   </style>
 </head>
 <body>
 
 <div class="dash">
-  <div class="controls">
-    <select id="garageSelect" style="padding: 4px;">
-      <option value="Northside 1">Northside 1</option>
-      <option value="Northside 2">Northside 2</option>
-      <option value="Southside 1">Southside 1</option>
-      <option value="Central Depot">Central Depot</option>
-    </select>
-    <button class="btn-print" onclick="window.print()">Print Snapshot</button>
-  </div>
-
   <div class="hdr">
     <div>
-      <h2 id="garageTitle">Garage Snapshot</h2>
-      <p style="font-weight: 600; font-size: 9pt;">Rating 2 | Effective Apr 28 – Aug 18, 2025</p>
+      <h2 id="garageTitle">Northside 1 Snapshot</h2>
+      <p style="font-size: 13px; color: var(--text-muted)">Rating 2: Apr 28 – Aug 18, 2025</p>
     </div>
-    <div style="text-align: right; font-size: 8pt;">
-      <b>Status:</b> Pre-Rating Snapshot<br>
-      <b>Printed:</b> <span id="printDate"></span>
-    </div>
+    <select class="garage-select" id="garageSelect">
+      <optgroup label="Northside">
+        <option value="Northside 1">Northside 1</option>
+        <option value="Northside 2">Northside 2</option>
+      </optgroup>
+      <optgroup label="Southside">
+        <option value="Southside 1">Southside 1</option>
+        <option value="Southside 2">Southside 2</option>
+      </optgroup>
+    </select>
   </div>
 
-  <p class="section-title">Staffing Coverage Ratio</p>
+  <p class="sl">Weekly Staffing Coverage</p>
   <div class="day-grid" id="dayGrid"></div>
 
   <div class="two-col">
     <div class="card">
-      <p class="section-title">Peak Pullout Requirements</p>
+      <p class="sl">Peak Bus Requirements</p>
       <canvas id="peakChart"></canvas>
     </div>
     <div class="card">
-      <p class="section-title">Hiring Pipeline (Graduation)</p>
+      <p class="sl">Hiring Pipeline (Graduation Weeks)</p>
       <canvas id="pipelineChart"></canvas>
     </div>
   </div>
 
   <div class="card">
-    <p class="section-title">Service Changes Effective This Rating</p>
+    <p class="sl">Active Service Changes</p>
     <div id="svcList"></div>
-  </div>
-
-  <div class="legend">
-    <div class="legend-item"><div class="box" style="background:#EAF3DE"></div> Safe (1.05+)</div>
-    <div class="legend-item"><div class="box" style="background:#FAEEDA"></div> Marginal (1.00+)</div>
-    <div class="legend-item"><div class="box" style="background:#FCEBEB"></div> At Risk (< 1.00)</div>
   </div>
 </div>
 
-<script>
-  Chart.register(ChartDataLabels);
-  document.getElementById('printDate').textContent = new Date().toLocaleDateString();
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
-  let pChart, hChart;
+<script>
+  let peakChart, pipelineChart;
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  function update() {
-    const r = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
+  // 1. Data Generator (Makes dropdown work)
+  function getGarageData(garageName) {
+    // Seeded random based on name length so data is "sticky" per garage
+    const seed = garageName.length;
+    const rng = (max, min = 0) => Math.floor(Math.random() * (max - min + 1) + min);
+
+    return {
+      staffing: days.map(d => {
+        const req = rng(60, 30);
+        const list = rng(req + 10, req - 5);
+        const abs = (rng(15, 8) / 100);
+        const ratio = (list * (1 - abs)) / req;
+        return { day: d, req, list, abs, ratio };
+      }),
+      peaks: days.map(d => ({ am: rng(55, 20), pm: rng(60, 25) })),
+      hiring: [
+        { label: 'Class A', ops: rng(5, 2), start: 0, end: 3 },
+        { label: 'Class B', ops: rng(4, 1), start: 4, end: 7 },
+        { label: 'Class C', ops: rng(6, 3), start: 8, end: 11 }
+      ]
+    };
+  }
+
+  // 2. Helper for Status
+  const getStatus = (r) => {
+    if (r >= 1.05) return { cls: 'safe', pill: 'pg', lbl: 'Safe' };
+    if (r >= 1.00) return { cls: 'marginal', pill: 'pa', lbl: 'Marginal' };
+    return { cls: 'risk', pill: 'pr', lbl: 'At Risk' };
+  };
+
+  // 3. UI Update Logic
+  function updateDashboard() {
     const garage = document.getElementById('garageSelect').value;
-    document.getElementById('garageTitle').textContent = garage;
+    document.getElementById('garageTitle').textContent = `${garage} Snapshot`;
+    const data = getGarageData(garage);
 
-    // 1. Restore Day Cards with Need/List/Absence
-    const staffing = days.map(d => {
-      const need = r(35, 50);
-      const list = r(need - 5, need + 10);
-      const abs = r(8, 15);
-      const ratio = (list * (1 - (abs/100))) / need;
-      return { d, need, list, abs, ratio };
-    });
-
-    document.getElementById('dayGrid').innerHTML = staffing.map(s => {
-      const color = s.ratio >= 1.05 ? '#EAF3DE' : s.ratio >= 1.0 ? '#FAEEDA' : '#FCEBEB';
-      const border = s.ratio >= 1.05 ? '#3B6D11' : s.ratio >= 1.0 ? '#854F0B' : '#A32D2D';
+    // Update Grid
+    const grid = document.getElementById('dayGrid');
+    grid.innerHTML = data.staffing.map(d => {
+      const s = getStatus(d.ratio);
       return `
-        <div class="day-card" style="background-color: ${color}; border-color: ${border}55;">
-          <b style="font-size: 8pt; color: ${border}">${s.d}</b>
-          <span class="day-ratio" style="color: ${border}">${s.ratio.toFixed(2)}</span>
-          <div class="day-stats" style="color: ${border}">
-            Need: ${s.need} | List: ${s.list}<br>
-            <b>${s.abs}% Absence</b>
-          </div>
+        <div class="day-card ${s.cls}">
+          <div style="font-size: 11px; color: var(--text-muted)">${d.day}</div>
+          <div class="day-ratio">${d.ratio.toFixed(2)}</div>
+          <div style="font-size: 10px">${Math.round(d.abs * 100)}% absence</div>
+          <span class="pill ${s.pill}">${s.lbl}</span>
         </div>`;
     }).join('');
 
-    // 2. Restore Service Changes
-    const changes = [
-      { n: 'Route 42 - Extension', m: '+3 Ops Mon-Fri', i: 'pr', l: 'High', d: 'Increased peak pull-out requirements for Harbor District service.' },
-      { n: 'Route 15 - Frequency', m: '+1 Op Mon-Sat', i: 'pa', l: 'Med', d: 'Headway reduced from 20 to 15 mins on core corridor.' }
-    ];
-    document.getElementById('svcList').innerHTML = changes.map(c => `
+    // Update Service Changes (Dummy context)
+    document.getElementById('svcList').innerHTML = `
       <div class="svc-row">
-        <div class="svc-name">${c.n} <span class="svc-impact" style="background:${c.i==='pr'?'#FCEBEB':'#FAEEDA'}; color:${c.i==='pr'?'#A32D2D':'#854F0B'}">${c.l}</span></div>
-        <div style="font-size: 7.5pt; color: #666; margin: 2px 0;">${c.m}</div>
-        <div style="font-size: 7.5pt;">${c.d}</div>
-      </div>`).join('');
+        <div class="svc-name">Route 101 Expansion <span class="pill pg">Low Impact</span></div>
+        <p style="font-size: 12px; color: var(--text-muted)">Adding ${data.hiring[0].ops} runs to midday service.</p>
+      </div>`;
 
-    // 3. Charts with Labels
-    if (pChart) pChart.destroy();
-    if (hChart) hChart.destroy();
+    renderCharts(data);
+  }
 
-    const pData = days.map(() => ({ am: r(25, 50), pm: r(30, 55) }));
-    pChart = new Chart(document.getElementById('peakChart'), {
+  // 4. Charting Logic
+  function renderCharts(data) {
+    if (peakChart) peakChart.destroy();
+    if (pipelineChart) pipelineChart.destroy();
+
+    // Peak Chart
+    peakChart = new Chart(document.getElementById('peakChart'), {
       type: 'bar',
       data: {
         labels: days,
         datasets: [
-          { label: 'AM', data: pData.map(d=>d.am), backgroundColor: '#3498db' },
-          { label: 'PM', data: pData.map(d=>d.pm), backgroundColor: '#2c3e50' }
+          { label: 'AM Peak', data: data.peaks.map(p => p.am), backgroundColor: '#378ADD' },
+          { label: 'PM Peak', data: data.peaks.map(p => p.pm), backgroundColor: '#534AB7' }
         ]
       },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { 
-          legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 8 } } },
-          datalabels: { display: true, color: '#000', anchor: 'end', align: 'top', offset: -2, font: { size: 8, weight: 'bold' } }
-        },
-        scales: { y: { display: false }, x: { grid: { display: false } } }
-      }
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
     });
 
-    const hData = [{l:'Class Jan', s:0, e:r(2,3), o:r(5,9)}, {l:'Class Mar', s:r(5,6), e:r(8,10), o:r(4,7)}];
-    hChart = new Chart(document.getElementById('pipelineChart'), {
+    // Pipeline Chart (Using floating bars)
+    pipelineChart = new Chart(document.getElementById('pipelineChart'), {
       type: 'bar',
       data: {
-        labels: hData.map(h=>h.l),
-        datasets: [{ data: hData.map(h=>[h.s, h.e]), backgroundColor: '#95a5a6' }]
+        labels: data.hiring.map(h => h.label),
+        datasets: [{
+          data: data.hiring.map(h => [h.start, h.end]),
+          backgroundColor: '#378ADD',
+          borderRadius: 6,
+          borderSkipped: false
+        }]
       },
       options: {
-        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-        plugins: { 
-          legend: { display: false },
-          datalabels: { display: true, color: '#fff', font: { size: 9, weight: 'bold' }, formatter: (v, ctx) => `${hData[ctx.dataIndex].o} Ops` }
-        },
-        scales: { x: { min: 0, max: 13, ticks: { font: { size: 8 } } }, y: { ticks: { font: { size: 8 } } } }
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { title: { display: true, text: 'Weeks from Today', font: { size: 10 } } } }
       }
     });
   }
 
-  document.getElementById('garageSelect').addEventListener('change', update);
-  window.onload = update;
+  // Event Listeners
+  document.getElementById('garageSelect').addEventListener('change', updateDashboard);
+  window.onload = updateDashboard;
 </script>
+
 </body>
 </html>
