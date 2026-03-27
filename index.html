@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Garage 3 — Rating 2 Pre-Rating Snapshot</title>
+  <title>Pre-Rating Snapshot</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -25,9 +25,49 @@
       margin-bottom: 1.5rem;
       padding-bottom: 1rem;
       border-bottom: 0.5px solid rgba(0,0,0,0.15);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
-    .hdr h2 { font-size: 18px; font-weight: 500; margin-bottom: 3px; }
-    .hdr p  { font-size: 12px; color: #5f5e5a; }
+    .hdr-left h2 { font-size: 18px; font-weight: 500; margin-bottom: 3px; }
+    .hdr-left p  { font-size: 12px; color: #5f5e5a; }
+
+    /* ── Garage select ── */
+    .garage-select-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .garage-select-lbl {
+      font-size: 11px;
+      color: #888780;
+      white-space: nowrap;
+    }
+    .garage-select {
+      font-size: 12px;
+      font-family: inherit;
+      font-weight: 500;
+      color: #1a1a18;
+      background: #fff;
+      border: 0.5px solid rgba(0,0,0,0.20);
+      border-radius: 8px;
+      padding: 6px 30px 6px 10px;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      transition: border-color 0.15s;
+    }
+    .garage-select:focus {
+      outline: none;
+      border-color: #378ADD;
+      box-shadow: 0 0 0 3px rgba(55,138,221,0.12);
+    }
+    optgroup { color: #888780; font-size: 11px; }
 
     /* ── Section label ── */
     .sl {
@@ -76,7 +116,7 @@
 
     .day-ratio { font-size: 28px; font-weight: 500; line-height: 1; margin-bottom: 3px; }
     .ratio-green { color: #3B6D11; }
-    .ratio-amber { color: #854F0B; }
+    .ratio-amber { color: #BA7517; }
     .ratio-red   { color: #A32D2D; }
 
     .day-abs-lbl { font-size: 10px; color: #5f5e5a; margin-bottom: 10px; }
@@ -97,27 +137,6 @@
 
     .day-status { margin-top: 10px; }
 
-    /* ── Table ── */
-    .tbl { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 1.5rem; }
-    .tbl th {
-      text-align: right;
-      font-size: 10px;
-      font-weight: 500;
-      color: #5f5e5a;
-      padding: 5px 8px;
-      border-bottom: 0.5px solid rgba(0,0,0,0.15);
-      letter-spacing: 0.04em;
-    }
-    .tbl th:first-child { text-align: left; }
-    .tbl td {
-      text-align: right;
-      padding: 7px 8px;
-      border-bottom: 0.5px solid rgba(0,0,0,0.10);
-      color: #1a1a18;
-    }
-    .tbl td:first-child { text-align: left; font-weight: 500; }
-    .tbl tr:last-child td { border-bottom: none; }
-
     /* ── Two-column layout ── */
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
     @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } .day-grid { grid-template-columns: repeat(4, 1fr); } }
@@ -131,21 +150,33 @@
       margin-bottom: 1rem;
     }
     .peak-wrap { position: relative; width: 100%; height: 140px; }
+    .timeline-wrap { position: relative; width: 100%; height: 168px; }
 
-    /* ── Hiring pipeline ── */
-    .class-row {
+    /* ── Timeline legend ── */
+    .tl-legend {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 8px 0;
-      border-bottom: 0.5px solid rgba(0,0,0,0.10);
-      font-size: 12px;
+      gap: 6px;
+      margin-top: 6px;
+      font-size: 10px;
+      color: #5f5e5a;
     }
-    .class-row:last-child { border-bottom: none; }
-    .class-label { font-weight: 500; color: #1a1a18; }
-    .class-sub   { font-size: 11px; color: #5f5e5a; }
-    .class-count { font-size: 20px; font-weight: 500; color: #1a1a18; }
-    .class-count-lbl { font-size: 10px; color: #5f5e5a; text-align: right; }
+    .tl-legend-bar {
+      width: 28px;
+      height: 8px;
+      background: #378ADD;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .tl-legend-zone {
+      width: 16px;
+      height: 8px;
+      background: #E6F1FB;
+      border: 0.5px solid #B8D5F5;
+      border-radius: 2px;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
 
     /* ── Service changes ── */
     .svc-row { padding: 10px 0; border-bottom: 0.5px solid rgba(0,0,0,0.10); font-size: 12px; }
@@ -160,27 +191,30 @@
 <div class="dash">
 
   <div class="hdr">
-    <h2>Garage 3 — Rating 2 Pre-Rating Snapshot</h2>
-    <p>Spring 2025 &nbsp;·&nbsp; Apr 28 – Aug 18 &nbsp;·&nbsp; Superintendent review</p>
+    <div class="hdr-left">
+      <h2 id="garageTitle">Northside 1 — Rating 2 Pre-Rating Snapshot</h2>
+      <p>Spring 2025 &nbsp;·&nbsp; Apr 28 – Aug 18 &nbsp;·&nbsp; Superintendent review</p>
+    </div>
+    <div class="garage-select-wrap">
+      <span class="garage-select-lbl">Garage</span>
+      <select class="garage-select" id="garageSelect">
+        <optgroup label="Northside">
+          <option value="Northside 1" selected>Northside 1</option>
+          <option value="Northside 2">Northside 2</option>
+          <option value="Northside 3">Northside 3</option>
+        </optgroup>
+        <optgroup label="Southside">
+          <option value="Southside 1">Southside 1</option>
+          <option value="Southside 2">Southside 2</option>
+          <option value="Southside 3">Southside 3</option>
+          <option value="Southside 4">Southside 4</option>
+        </optgroup>
+      </select>
+    </div>
   </div>
 
   <p class="sl">Planned coverage — typical week</p>
   <div class="day-grid" id="dayGrid"></div>
-
-  <p class="sl">Full planning detail — typical week</p>
-  <table class="tbl">
-    <thead>
-      <tr>
-        <th>Day</th>
-        <th>Required ops</th>
-        <th>List</th>
-        <th>Absence rate</th>
-        <th>Coverage ratio</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="detailBody"></tbody>
-  </table>
 
   <div class="two-col">
     <div class="card">
@@ -189,7 +223,13 @@
     </div>
     <div class="card">
       <p class="sl">Operators in hiring pipeline</p>
-      <div id="classList"></div>
+      <div class="timeline-wrap"><canvas id="timelineChart"></canvas></div>
+      <div class="tl-legend">
+        <div class="tl-legend-bar"></div>
+        Graduation window (10–13 wks from class start)
+        <div class="tl-legend-zone"></div>
+        Rating period
+      </div>
     </div>
   </div>
 
@@ -203,7 +243,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
   /* ─────────────────────────────────────────
-     DATA — replace with real inputs
+     GARAGE SELECTOR
+  ───────────────────────────────────────── */
+  document.getElementById('garageSelect').addEventListener('change', function () {
+    document.getElementById('garageTitle').textContent =
+      this.value + ' — Rating 2 Pre-Rating Snapshot';
+  });
+
+  /* ─────────────────────────────────────────
+     DATA
   ───────────────────────────────────────── */
   const days = [
     { day:'Mon', required:45, list:56, absRate:0.10 },
@@ -225,11 +273,17 @@
     { day:'Sun', amPeak:22, pmPeak:25 },
   ];
 
+  // Classes defined by start date; graduation window = 10–13 weeks out
   const hiringClasses = [
-    { label:'Class Jan 2025', ops:3, sub:'Graduating Jun 2 – Jun 9' },
-    { label:'Class Mar 2025', ops:2, sub:'Graduating Jun 30' },
-    { label:'Class May 2025', ops:2, sub:'Graduating Jul 7 – Jul 14' },
+    { label: 'Class Jan 2025', ops: 3, startDate: new Date(2025, 0, 13) },
+    { label: 'Class Mar 2025', ops: 2, startDate: new Date(2025, 2, 17) },
+    { label: 'Class May 2025', ops: 2, startDate: new Date(2025, 4, 12) },
   ];
+  const WEEKS_EARLY = 10, WEEKS_LATE = 13;
+  hiringClasses.forEach(c => {
+    c.gradEarly = new Date(c.startDate.getTime() + WEEKS_EARLY * 7 * 86400000);
+    c.gradLate  = new Date(c.startDate.getTime() + WEEKS_LATE  * 7 * 86400000);
+  });
 
   const serviceChanges = [
     {
@@ -266,6 +320,8 @@
   function pillClass(r) { return r >= 1.05 ? 'pg' : r >= 1.00 ? 'pa' : 'pr'; }
   function cardClass(r) { return r >= 1.05 ? '' : r >= 1.00 ? 'marginal' : 'risk'; }
 
+  const fmtDate = d => d.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+
   days.forEach(calcDay);
 
   /* ─────────────────────────────────────────
@@ -296,22 +352,6 @@
   });
 
   /* ─────────────────────────────────────────
-     DETAIL TABLE
-  ───────────────────────────────────────── */
-  const tbody = document.getElementById('detailBody');
-  days.forEach(d => {
-    tbody.innerHTML += `
-      <tr>
-        <td>${d.day}</td>
-        <td>${d.required}</td>
-        <td>${d.list}</td>
-        <td>${Math.round(d.absRate * 100)}%</td>
-        <td style="font-weight:500; color:${rColor(d.ratio)};">${d.ratio.toFixed(2)}</td>
-        <td><span class="pill ${pillClass(d.ratio)}">${rLabel(d.ratio)}</span></td>
-      </tr>`;
-  });
-
-  /* ─────────────────────────────────────────
      PEAK CHART
   ───────────────────────────────────────── */
   new Chart(document.getElementById('peakChart'), {
@@ -338,22 +378,141 @@
   });
 
   /* ─────────────────────────────────────────
-     HIRING PIPELINE
+     GRADUATION TIMELINE
   ───────────────────────────────────────── */
-  const cl = document.getElementById('classList');
-  hiringClasses.forEach(c => {
-    cl.innerHTML += `
-      <div class="class-row">
-        <div>
-          <div class="class-label">${c.label}</div>
-          <div class="class-sub">${c.sub}</div>
-        </div>
-        <div style="text-align:right;">
-          <div class="class-count">${c.ops}</div>
-          <div class="class-count-lbl">operators</div>
-        </div>
-      </div>`;
-  });
+  function drawTimeline() {
+    const canvas = document.getElementById('timelineChart');
+    if (!canvas) return;
+    const container = canvas.parentElement;
+    const cssW = container.clientWidth;
+    const cssH = 168;
+    const dpr  = window.devicePixelRatio || 1;
+    canvas.width  = cssW * dpr;
+    canvas.height = cssH * dpr;
+    canvas.style.width  = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    const W = cssW, H = cssH;
+    const padL = 98, padR = 10, padT = 22, padB = 22;
+    const trackW = W - padL - padR;
+
+    // Time window: Jan 1 – Sep 30 2025
+    const viewStart = new Date(2025, 0, 1);
+    const viewEnd   = new Date(2025, 8, 30);
+    const totalMs   = viewEnd - viewStart;
+    const toX = d => padL + Math.round(((d - viewStart) / totalMs) * trackW);
+
+    // Rating period
+    const ratingStart = new Date(2025, 3, 28);
+    const ratingEnd   = new Date(2025, 7, 18);
+    const rxS = toX(ratingStart), rxE = toX(ratingEnd);
+
+    // ── Rating zone fill ──
+    ctx.fillStyle = '#E6F1FB';
+    roundRect(ctx, rxS, padT, rxE - rxS, H - padT - padB, 0);
+
+    // ── Rating zone border lines ──
+    ctx.strokeStyle = '#B8D5F5';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.moveTo(rxS, padT); ctx.lineTo(rxS, H - padB); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(rxE, padT); ctx.lineTo(rxE, H - padB); ctx.stroke();
+
+    // ── Month tick lines ──
+    for (let m = 0; m <= 8; m++) {
+      const d = new Date(2025, m, 1);
+      const x = toX(d);
+      ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, H - padB); ctx.stroke();
+    }
+
+    // ── Month labels ──
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'];
+    ctx.fillStyle = '#aaa';
+    ctx.font = `10px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    months.forEach((m, i) => {
+      const x = toX(new Date(2025, i, 1));
+      ctx.fillText(m, x, H - 2);
+    });
+
+    // ── Row height ──
+    const rowH = 18;
+    const rowSpacing = 36;
+    const firstRowY = padT + 16;
+
+    hiringClasses.forEach((c, i) => {
+      const y = firstRowY + i * rowSpacing;
+      const x1 = toX(c.gradEarly);
+      const x2 = toX(c.gradLate);
+
+      // ── Row label ──
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#1a1a18';
+      ctx.font = `500 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+      ctx.fillText(c.label.replace('Class ', ''), padL - 8, y + rowH / 2 - 6);
+      ctx.fillStyle = '#888780';
+      ctx.font = `10px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+      ctx.fillText(c.ops + ' operator' + (c.ops !== 1 ? 's' : ''), padL - 8, y + rowH / 2 + 7);
+
+      // ── Graduation bar ──
+      const barColor  = c.gradLate < ratingStart ? '#A0AEC0' : '#378ADD';
+      const barColor2 = c.gradLate < ratingStart ? '#718096' : '#185FA5';
+      ctx.fillStyle = barColor;
+      roundRect(ctx, x1, y, x2 - x1, rowH, 4);
+
+      // ── "10 wk" / "13 wk" end-cap labels ──
+      ctx.fillStyle = barColor2;
+      ctx.font = `9px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+      ctx.textBaseline = 'top';
+
+      // Early date — left-align if bar is wide enough
+      const barW = x2 - x1;
+      if (barW > 54) {
+        ctx.textAlign = 'left';
+        ctx.fillText(fmtDate(c.gradEarly), x1, y + rowH + 3);
+        ctx.textAlign = 'right';
+        ctx.fillText(fmtDate(c.gradLate), x2, y + rowH + 3);
+      } else {
+        ctx.textAlign = 'center';
+        ctx.fillText(fmtDate(c.gradEarly) + '–' + fmtDate(c.gradLate), (x1 + x2) / 2, y + rowH + 3);
+      }
+
+      // ── "Available at start" badge for pre-rating grads ──
+      if (c.gradLate <= ratingStart) {
+        ctx.fillStyle = '#EAF3DE';
+        const badge = 'Ready at rating start';
+        ctx.font = `9px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        const bx = rxS + 6, by = y + rowH / 2;
+        ctx.fillText(badge, bx, by);
+      }
+    });
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  window.addEventListener('load', drawTimeline);
+  window.addEventListener('resize', drawTimeline);
 
   /* ─────────────────────────────────────────
      SERVICE CHANGES
