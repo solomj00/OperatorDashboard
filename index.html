@@ -3,532 +3,214 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pre-Rating Snapshot</title>
+  <title>Pre-Rating Snapshot Dashboard</title>
   <style>
+    :root {
+      --bg-page: #f5f4f0;
+      --bg-card: #ffffff;
+      --text-main: #1a1a18;
+      --text-muted: #5f5e5a;
+      --border-light: rgba(0,0,0,0.12);
+      
+      /* Status Colors */
+      --safe-bg: #EAF3DE; --safe-text: #3B6D11; --safe-border: #C6DBAF;
+      --warn-bg: #FAEEDA; --warn-text: #854F0B; --warn-border: #FAC775;
+      --risk-bg: #FCEBEB; --risk-text: #A32D2D; --risk-border: #F7C1C1;
+      
+      --primary: #378ADD;
+      --secondary: #534AB7;
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg-page); color: var(--text-main); padding: 2rem; min-height: 100vh; }
+    .dash { max-width: 1000px; margin: 0 auto; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f5f4f0;
-      color: #1a1a18;
-      padding: 2rem;
-      min-height: 100vh;
-    }
+    /* Header & Select */
+    .hdr { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .hdr h2 { font-size: 20px; font-weight: 600; }
+    .garage-select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-light); font-size: 14px; cursor: pointer; }
 
-    .dash {
-      max-width: 960px;
-      margin: 0 auto;
-    }
+    /* Grid Layouts */
+    .day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    @media (max-width: 800px) { .day-grid { grid-template-columns: repeat(4, 1fr); } .two-col { grid-template-columns: 1fr; } }
 
-    /* ── Header ── */
-    .hdr {
-      margin-bottom: 1.5rem;
-      padding-bottom: 1rem;
-      border-bottom: 0.5px solid rgba(0,0,0,0.15);
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-    .hdr-left h2 { font-size: 18px; font-weight: 500; margin-bottom: 3px; }
-    .hdr-left p  { font-size: 12px; color: #5f5e5a; }
+    /* Components */
+    .sl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 12px; }
+    .card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 12px; padding: 1.25rem; }
+    
+    /* Day Cards Status Styling */
+    .day-card { border-radius: 10px; padding: 15px 10px; text-align: center; border: 1px solid var(--border-light); background: var(--bg-card); transition: transform 0.2s; }
+    .day-card.safe { border-color: var(--safe-border); }
+    .day-card.marginal { background: var(--warn-bg); border-color: var(--warn-border); }
+    .day-card.risk { background: var(--risk-bg); border-color: var(--risk-border); }
 
-    /* ── Garage select ── */
-    .garage-select-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .garage-select-lbl {
-      font-size: 11px;
-      color: #888780;
-      white-space: nowrap;
-    }
-    .garage-select {
-      font-size: 12px;
-      font-family: inherit;
-      font-weight: 500;
-      color: #1a1a18;
-      background: #fff;
-      border: 0.5px solid rgba(0,0,0,0.20);
-      border-radius: 8px;
-      padding: 6px 30px 6px 10px;
-      appearance: none;
-      -webkit-appearance: none;
-      cursor: pointer;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      transition: border-color 0.15s;
-    }
-    .garage-select:focus {
-      outline: none;
-      border-color: #378ADD;
-      box-shadow: 0 0 0 3px rgba(55,138,221,0.12);
-    }
-    optgroup { color: #888780; font-size: 11px; }
+    .day-ratio { font-size: 24px; font-weight: 700; margin: 5px 0; }
+    .day-card.safe .day-ratio { color: var(--safe-text); }
+    .day-card.marginal .day-ratio { color: var(--warn-text); }
+    .day-card.risk .day-ratio { color: var(--risk-text); }
 
-    /* ── Section label ── */
-    .sl {
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: 0.09em;
-      text-transform: uppercase;
-      color: #888780;
-      margin: 0 0 10px;
-    }
+    .pill { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-top: 8px; }
+    .pill.pg { background: var(--safe-bg); color: var(--safe-text); }
+    .pill.pa { background: #fff; color: var(--warn-text); border: 1px solid var(--warn-border); }
+    .pill.pr { background: #fff; color: var(--risk-text); border: 1px solid var(--risk-border); }
 
-    /* ── Pills ── */
-    .pill {
-      display: inline-block;
-      font-size: 10px;
-      font-weight: 500;
-      padding: 2px 9px;
-      border-radius: 10px;
-      white-space: nowrap;
-    }
-    .pr { background: #FCEBEB; color: #A32D2D; }
-    .pg { background: #EAF3DE; color: #3B6D11; }
-    .pa { background: #FAEEDA; color: #854F0B; }
-    .pb { background: #E6F1FB; color: #185FA5; }
-
-    /* ── Day cards ── */
-    .day-grid {
-      display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
-      gap: 8px;
-      margin-bottom: 1.5rem;
-    }
-    .day-card {
-      border-radius: 10px;
-      padding: 14px 10px;
-      text-align: center;
-      border: 0.5px solid rgba(0,0,0,0.12);
-      background: #ffffff;
-    }
-    .day-card.risk     { border-color: #F7C1C1; background: #FCEBEB; }
-    .day-card.marginal { border-color: #FAC775; background: #FAEEDA; }
-
-    .day-name { font-size: 11px; font-weight: 500; margin-bottom: 8px; color: #5f5e5a; }
-    .day-card.risk     .day-name { color: #993C1D; }
-    .day-card.marginal .day-name { color: #854F0B; }
-
-    .day-ratio { font-size: 28px; font-weight: 500; line-height: 1; margin-bottom: 3px; }
-    .ratio-green { color: #3B6D11; }
-    .ratio-amber { color: #BA7517; }
-    .ratio-red   { color: #A32D2D; }
-
-    .day-abs-lbl { font-size: 10px; color: #5f5e5a; margin-bottom: 10px; }
-    .day-card.risk     .day-abs-lbl { color: #993C1D; opacity: 0.8; }
-    .day-card.marginal .day-abs-lbl { color: #854F0B; opacity: 0.8; }
-
-    .day-divider { height: 0.5px; background: rgba(0,0,0,0.12); margin: 0 0 10px; }
-    .day-card.risk     .day-divider { background: #F7C1C1; }
-    .day-card.marginal .day-divider { background: #FAC775; }
-
-    .day-stat-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; }
-    .day-stat-lbl { color: #5f5e5a; }
-    .day-card.risk     .day-stat-lbl { color: #993C1D; opacity: 0.75; }
-    .day-card.marginal .day-stat-lbl { color: #854F0B; opacity: 0.75; }
-    .day-stat-val { font-weight: 500; color: #1a1a18; }
-    .day-card.risk     .day-stat-val { color: #A32D2D; }
-    .day-card.marginal .day-stat-val { color: #854F0B; }
-
-    .day-status { margin-top: 10px; }
-
-    /* ── Two-column layout ── */
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
-    @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } .day-grid { grid-template-columns: repeat(4, 1fr); } }
-
-    /* ── Cards ── */
-    .card {
-      background: #ffffff;
-      border: 0.5px solid rgba(0,0,0,0.12);
-      border-radius: 12px;
-      padding: 1rem 1.25rem;
-      margin-bottom: 1rem;
-    }
-    .peak-wrap { position: relative; width: 100%; height: 140px; }
-    .timeline-wrap { position: relative; width: 100%; height: 168px; }
-
-    /* ── Timeline legend ── */
-    .tl-legend {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 6px;
-      font-size: 10px;
-      color: #5f5e5a;
-    }
-    .tl-legend-bar {
-      width: 28px;
-      height: 8px;
-      background: #378ADD;
-      border-radius: 2px;
-      flex-shrink: 0;
-    }
-    .tl-legend-zone {
-      width: 16px;
-      height: 8px;
-      background: #E6F1FB;
-      border: 0.5px solid #B8D5F5;
-      border-radius: 2px;
-      flex-shrink: 0;
-      margin-left: 8px;
-    }
-
-    /* ── Service changes ── */
-    .svc-row { padding: 10px 0; border-bottom: 0.5px solid rgba(0,0,0,0.10); font-size: 12px; }
+    canvas { width: 100% !important; height: 180px !important; }
+    
+    .svc-row { padding: 12px 0; border-bottom: 1px solid var(--border-light); }
     .svc-row:last-child { border-bottom: none; }
-    .svc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 8px; }
-    .svc-name { font-weight: 500; color: #1a1a18; }
-    .svc-meta { font-size: 11px; color: #5f5e5a; margin-bottom: 4px; }
-    .svc-desc { font-size: 11px; color: #5f5e5a; line-height: 1.5; }
+    .svc-name { font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
   </style>
 </head>
 <body>
-<div class="dash">
 
+<div class="dash">
   <div class="hdr">
-    <div class="hdr-left">
-      <h2 id="garageTitle">Northside 1 — Rating 2 Pre-Rating Snapshot</h2>
-      <p>Spring 2025 &nbsp;·&nbsp; Apr 28 – Aug 18 &nbsp;·&nbsp; Superintendent review</p>
+    <div>
+      <h2 id="garageTitle">Northside 1 Snapshot</h2>
+      <p style="font-size: 13px; color: var(--text-muted)">Rating 2: Apr 28 – Aug 18, 2025</p>
     </div>
-    <div class="garage-select-wrap">
-      <span class="garage-select-lbl">Garage</span>
-      <select class="garage-select" id="garageSelect">
-        <optgroup label="Northside">
-          <option value="Northside 1" selected>Northside 1</option>
-          <option value="Northside 2">Northside 2</option>
-          <option value="Northside 3">Northside 3</option>
-        </optgroup>
-        <optgroup label="Southside">
-          <option value="Southside 1">Southside 1</option>
-          <option value="Southside 2">Southside 2</option>
-          <option value="Southside 3">Southside 3</option>
-          <option value="Southside 4">Southside 4</option>
-        </optgroup>
-      </select>
-    </div>
+    <select class="garage-select" id="garageSelect">
+      <optgroup label="Northside">
+        <option value="Northside 1">Northside 1</option>
+        <option value="Northside 2">Northside 2</option>
+      </optgroup>
+      <optgroup label="Southside">
+        <option value="Southside 1">Southside 1</option>
+        <option value="Southside 2">Southside 2</option>
+      </optgroup>
+    </select>
   </div>
 
-  <p class="sl">Planned coverage — typical week</p>
+  <p class="sl">Weekly Staffing Coverage</p>
   <div class="day-grid" id="dayGrid"></div>
 
   <div class="two-col">
     <div class="card">
-      <p class="sl">AM / PM peak buses — typical week</p>
-      <div class="peak-wrap"><canvas id="peakChart"></canvas></div>
+      <p class="sl">Peak Bus Requirements</p>
+      <canvas id="peakChart"></canvas>
     </div>
     <div class="card">
-      <p class="sl">Operators in hiring pipeline</p>
-      <div class="timeline-wrap"><canvas id="timelineChart"></canvas></div>
-      <div class="tl-legend">
-        <div class="tl-legend-bar"></div>
-        Graduation window (10–13 wks from class start)
-        <div class="tl-legend-zone"></div>
-        Rating period
-      </div>
+      <p class="sl">Hiring Pipeline (Graduation Weeks)</p>
+      <canvas id="pipelineChart"></canvas>
     </div>
   </div>
 
   <div class="card">
-    <p class="sl">Service changes effective this rating</p>
+    <p class="sl">Active Service Changes</p>
     <div id="svcList"></div>
   </div>
-
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
 <script>
-  /* ─────────────────────────────────────────
-     GARAGE SELECTOR
-  ───────────────────────────────────────── */
-  document.getElementById('garageSelect').addEventListener('change', function () {
-    document.getElementById('garageTitle').textContent =
-      this.value + ' — Rating 2 Pre-Rating Snapshot';
-  });
+  let peakChart, pipelineChart;
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  /* ─────────────────────────────────────────
-     DATA
-  ───────────────────────────────────────── */
-  const days = [
-    { day:'Mon', required:45, list:56, absRate:0.10 },
-    { day:'Tue', required:44, list:55, absRate:0.10 },
-    { day:'Wed', required:44, list:55, absRate:0.10 },
-    { day:'Thu', required:48, list:55, absRate:0.12 },
-    { day:'Fri', required:62, list:65, absRate:0.15 },
-    { day:'Sat', required:36, list:45, absRate:0.11 },
-    { day:'Sun', required:26, list:34, absRate:0.09 },
-  ];
+  // 1. Data Generator (Makes dropdown work)
+  function getGarageData(garageName) {
+    // Seeded random based on name length so data is "sticky" per garage
+    const seed = garageName.length;
+    const rng = (max, min = 0) => Math.floor(Math.random() * (max - min + 1) + min);
 
-  const peakData = [
-    { day:'Mon', amPeak:42, pmPeak:44 },
-    { day:'Tue', amPeak:40, pmPeak:43 },
-    { day:'Wed', amPeak:40, pmPeak:43 },
-    { day:'Thu', amPeak:45, pmPeak:47 },
-    { day:'Fri', amPeak:56, pmPeak:60 },
-    { day:'Sat', amPeak:30, pmPeak:34 },
-    { day:'Sun', amPeak:22, pmPeak:25 },
-  ];
-
-  // Classes defined by start date; graduation window = 10–13 weeks out
-  const hiringClasses = [
-    { label: 'Class Jan 2025', ops: 3, startDate: new Date(2025, 0, 13) },
-    { label: 'Class Mar 2025', ops: 2, startDate: new Date(2025, 2, 17) },
-    { label: 'Class May 2025', ops: 2, startDate: new Date(2025, 4, 12) },
-  ];
-  const WEEKS_EARLY = 10, WEEKS_LATE = 13;
-  hiringClasses.forEach(c => {
-    c.gradEarly = new Date(c.startDate.getTime() + WEEKS_EARLY * 7 * 86400000);
-    c.gradLate  = new Date(c.startDate.getTime() + WEEKS_LATE  * 7 * 86400000);
-  });
-
-  const serviceChanges = [
-    {
-      name:   'Route 42 — Extended service',
-      meta:   '+3 operators Mon–Fri · Effective Apr 28',
-      desc:   'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Service extension adds weekday trips through the Harbor district, increasing peak pull-out requirements beginning the first week of the rating.',
-      impact: 'pr', label: 'High impact'
-    },
-    {
-      name:   'Route 15 — Frequency increase',
-      meta:   '+1 operator Mon–Sat · Effective May 5',
-      desc:   'Sed do eiusmod tempor incididunt ut labore. Headway reduced from 20 to 15 minutes on the core corridor, adding one additional operator requirement across six days per week.',
-      impact: 'pa', label: 'Med impact'
-    },
-    {
-      name:   'Route 8 — Reroute via Harbor Blvd',
-      meta:   'No headcount change · Retraining required',
-      desc:   'Ut enim ad minim veniam, quis nostrud exercitation. Path change does not alter run count but operators assigned to this route will require familiarity with the revised alignment before pullout.',
-      impact: 'pg', label: 'Low impact'
-    },
-  ];
-
-  /* ─────────────────────────────────────────
-     HELPERS
-  ───────────────────────────────────────── */
-  function calcDay(d) {
-    d.effective = d.list * (1 - d.absRate);
-    d.ratio     = d.effective / d.required;
-    return d;
-  }
-  function rColor(r) { return r >= 1.05 ? '#639922' : r >= 1.00 ? '#BA7517' : '#A32D2D'; }
-  function rKey(r)   { return r >= 1.05 ? 'green'   : r >= 1.00 ? 'amber'   : 'red'; }
-  function rLabel(r) { return r >= 1.05 ? 'Safe'    : r >= 1.00 ? 'Marginal': 'At risk'; }
-  function pillClass(r) { return r >= 1.05 ? 'pg' : r >= 1.00 ? 'pa' : 'pr'; }
-  function cardClass(r) { return r >= 1.05 ? '' : r >= 1.00 ? 'marginal' : 'risk'; }
-
-  const fmtDate = d => d.toLocaleDateString('en-US', { month:'short', day:'numeric' });
-
-  days.forEach(calcDay);
-
-  /* ─────────────────────────────────────────
-     DAY CARDS
-  ───────────────────────────────────────── */
-  const grid = document.getElementById('dayGrid');
-  days.forEach(d => {
-    const rk = rKey(d.ratio);
-    const cc = cardClass(d.ratio);
-    grid.innerHTML += `
-      <div class="day-card ${cc}">
-        <div class="day-name">${d.day}</div>
-        <div class="day-ratio ratio-${rk}">${d.ratio.toFixed(2)}</div>
-        <div class="day-abs-lbl">${Math.round(d.absRate * 100)}% absence</div>
-        <div class="day-divider"></div>
-        <div class="day-stat-row">
-          <span class="day-stat-lbl">Need</span>
-          <span class="day-stat-val">${d.required}</span>
-        </div>
-        <div class="day-stat-row">
-          <span class="day-stat-lbl">List</span>
-          <span class="day-stat-val">${d.list}</span>
-        </div>
-        <div class="day-status">
-          <span class="pill ${pillClass(d.ratio)}">${rLabel(d.ratio)}</span>
-        </div>
-      </div>`;
-  });
-
-  /* ─────────────────────────────────────────
-     PEAK CHART
-  ───────────────────────────────────────── */
-  new Chart(document.getElementById('peakChart'), {
-    type: 'bar',
-    data: {
-      labels: peakData.map(d => d.day),
-      datasets: [
-        { label:'AM peak', data: peakData.map(d => d.amPeak), backgroundColor:'#378ADD', borderRadius:3, barThickness:14 },
-        { label:'PM peak', data: peakData.map(d => d.pmPeak), backgroundColor:'#534AB7', borderRadius:3, barThickness:14 },
+    return {
+      staffing: days.map(d => {
+        const req = rng(60, 30);
+        const list = rng(req + 10, req - 5);
+        const abs = (rng(15, 8) / 100);
+        const ratio = (list * (1 - abs)) / req;
+        return { day: d, req, list, abs, ratio };
+      }),
+      peaks: days.map(d => ({ am: rng(55, 20), pm: rng(60, 25) })),
+      hiring: [
+        { label: 'Class A', ops: rng(5, 2), start: 0, end: 3 },
+        { label: 'Class B', ops: rng(4, 1), start: 4, end: 7 },
+        { label: 'Class C', ops: rng(6, 3), start: 8, end: 11 }
       ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y} buses` } }
-      },
-      scales: {
-        y: { ticks: { font:{ size:10 } }, grid: { color:'rgba(0,0,0,0.06)' } },
-        x: { ticks: { font:{ size:11 } }, grid: { display:false } }
-      }
-    }
-  });
-
-  /* ─────────────────────────────────────────
-     GRADUATION TIMELINE
-  ───────────────────────────────────────── */
-  function drawTimeline() {
-    const canvas = document.getElementById('timelineChart');
-    if (!canvas) return;
-    const container = canvas.parentElement;
-    const cssW = container.clientWidth;
-    const cssH = 168;
-    const dpr  = window.devicePixelRatio || 1;
-    canvas.width  = cssW * dpr;
-    canvas.height = cssH * dpr;
-    canvas.style.width  = cssW + 'px';
-    canvas.style.height = cssH + 'px';
-
-    const ctx = canvas.getContext('2d');
-    ctx.scale(dpr, dpr);
-
-    const W = cssW, H = cssH;
-    const padL = 98, padR = 10, padT = 22, padB = 22;
-    const trackW = W - padL - padR;
-
-    // Time window: Jan 1 – Sep 30 2025
-    const viewStart = new Date(2025, 0, 1);
-    const viewEnd   = new Date(2025, 8, 30);
-    const totalMs   = viewEnd - viewStart;
-    const toX = d => padL + Math.round(((d - viewStart) / totalMs) * trackW);
-
-    // Rating period
-    const ratingStart = new Date(2025, 3, 28);
-    const ratingEnd   = new Date(2025, 7, 18);
-    const rxS = toX(ratingStart), rxE = toX(ratingEnd);
-
-    // ── Rating zone fill ──
-    ctx.fillStyle = '#E6F1FB';
-    roundRect(ctx, rxS, padT, rxE - rxS, H - padT - padB, 0);
-
-    // ── Rating zone border lines ──
-    ctx.strokeStyle = '#B8D5F5';
-    ctx.lineWidth = 0.5;
-    ctx.beginPath(); ctx.moveTo(rxS, padT); ctx.lineTo(rxS, H - padB); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(rxE, padT); ctx.lineTo(rxE, H - padB); ctx.stroke();
-
-    // ── Month tick lines ──
-    for (let m = 0; m <= 8; m++) {
-      const d = new Date(2025, m, 1);
-      const x = toX(d);
-      ctx.strokeStyle = 'rgba(0,0,0,0.06)';
-      ctx.lineWidth = 0.5;
-      ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, H - padB); ctx.stroke();
-    }
-
-    // ── Month labels ──
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'];
-    ctx.fillStyle = '#aaa';
-    ctx.font = `10px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    months.forEach((m, i) => {
-      const x = toX(new Date(2025, i, 1));
-      ctx.fillText(m, x, H - 2);
-    });
-
-    // ── Row height ──
-    const rowH = 18;
-    const rowSpacing = 36;
-    const firstRowY = padT + 16;
-
-    hiringClasses.forEach((c, i) => {
-      const y = firstRowY + i * rowSpacing;
-      const x1 = toX(c.gradEarly);
-      const x2 = toX(c.gradLate);
-
-      // ── Row label ──
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#1a1a18';
-      ctx.font = `500 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
-      ctx.fillText(c.label.replace('Class ', ''), padL - 8, y + rowH / 2 - 6);
-      ctx.fillStyle = '#888780';
-      ctx.font = `10px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
-      ctx.fillText(c.ops + ' operator' + (c.ops !== 1 ? 's' : ''), padL - 8, y + rowH / 2 + 7);
-
-      // ── Graduation bar ──
-      const barColor  = c.gradLate < ratingStart ? '#A0AEC0' : '#378ADD';
-      const barColor2 = c.gradLate < ratingStart ? '#718096' : '#185FA5';
-      ctx.fillStyle = barColor;
-      roundRect(ctx, x1, y, x2 - x1, rowH, 4);
-
-      // ── "10 wk" / "13 wk" end-cap labels ──
-      ctx.fillStyle = barColor2;
-      ctx.font = `9px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
-      ctx.textBaseline = 'top';
-
-      // Early date — left-align if bar is wide enough
-      const barW = x2 - x1;
-      if (barW > 54) {
-        ctx.textAlign = 'left';
-        ctx.fillText(fmtDate(c.gradEarly), x1, y + rowH + 3);
-        ctx.textAlign = 'right';
-        ctx.fillText(fmtDate(c.gradLate), x2, y + rowH + 3);
-      } else {
-        ctx.textAlign = 'center';
-        ctx.fillText(fmtDate(c.gradEarly) + '–' + fmtDate(c.gradLate), (x1 + x2) / 2, y + rowH + 3);
-      }
-
-      // ── "Available at start" badge for pre-rating grads ──
-      if (c.gradLate <= ratingStart) {
-        ctx.fillStyle = '#EAF3DE';
-        const badge = 'Ready at rating start';
-        ctx.font = `9px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        const bx = rxS + 6, by = y + rowH / 2;
-        ctx.fillText(badge, bx, by);
-      }
-    });
+    };
   }
 
-  function roundRect(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.closePath();
-    ctx.fill();
-  }
+  // 2. Helper for Status
+  const getStatus = (r) => {
+    if (r >= 1.05) return { cls: 'safe', pill: 'pg', lbl: 'Safe' };
+    if (r >= 1.00) return { cls: 'marginal', pill: 'pa', lbl: 'Marginal' };
+    return { cls: 'risk', pill: 'pr', lbl: 'At Risk' };
+  };
 
-  window.addEventListener('load', drawTimeline);
-  window.addEventListener('resize', drawTimeline);
+  // 3. UI Update Logic
+  function updateDashboard() {
+    const garage = document.getElementById('garageSelect').value;
+    document.getElementById('garageTitle').textContent = `${garage} Snapshot`;
+    const data = getGarageData(garage);
 
-  /* ─────────────────────────────────────────
-     SERVICE CHANGES
-  ───────────────────────────────────────── */
-  const sl = document.getElementById('svcList');
-  serviceChanges.forEach(s => {
-    sl.innerHTML += `
+    // Update Grid
+    const grid = document.getElementById('dayGrid');
+    grid.innerHTML = data.staffing.map(d => {
+      const s = getStatus(d.ratio);
+      return `
+        <div class="day-card ${s.cls}">
+          <div style="font-size: 11px; color: var(--text-muted)">${d.day}</div>
+          <div class="day-ratio">${d.ratio.toFixed(2)}</div>
+          <div style="font-size: 10px">${Math.round(d.abs * 100)}% absence</div>
+          <span class="pill ${s.pill}">${s.lbl}</span>
+        </div>`;
+    }).join('');
+
+    // Update Service Changes (Dummy context)
+    document.getElementById('svcList').innerHTML = `
       <div class="svc-row">
-        <div class="svc-header">
-          <span class="svc-name">${s.name}</span>
-          <span class="pill ${s.impact}">${s.label}</span>
-        </div>
-        <div class="svc-meta">${s.meta}</div>
-        <div class="svc-desc">${s.desc}</div>
+        <div class="svc-name">Route 101 Expansion <span class="pill pg">Low Impact</span></div>
+        <p style="font-size: 12px; color: var(--text-muted)">Adding ${data.hiring[0].ops} runs to midday service.</p>
       </div>`;
-  });
+
+    renderCharts(data);
+  }
+
+  // 4. Charting Logic
+  function renderCharts(data) {
+    if (peakChart) peakChart.destroy();
+    if (pipelineChart) pipelineChart.destroy();
+
+    // Peak Chart
+    peakChart = new Chart(document.getElementById('peakChart'), {
+      type: 'bar',
+      data: {
+        labels: days,
+        datasets: [
+          { label: 'AM Peak', data: data.peaks.map(p => p.am), backgroundColor: '#378ADD' },
+          { label: 'PM Peak', data: data.peaks.map(p => p.pm), backgroundColor: '#534AB7' }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+
+    // Pipeline Chart (Using floating bars)
+    pipelineChart = new Chart(document.getElementById('pipelineChart'), {
+      type: 'bar',
+      data: {
+        labels: data.hiring.map(h => h.label),
+        datasets: [{
+          data: data.hiring.map(h => [h.start, h.end]),
+          backgroundColor: '#378ADD',
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { title: { display: true, text: 'Weeks from Today', font: { size: 10 } } } }
+      }
+    });
+  }
+
+  // Event Listeners
+  document.getElementById('garageSelect').addEventListener('change', updateDashboard);
+  window.onload = updateDashboard;
 </script>
+
 </body>
 </html>
