@@ -131,8 +131,32 @@
   svg#house.has-stage-4 #stage-window-light{ opacity:1; }
   svg#house.has-stage-4 #stage-path path{ stroke-dashoffset:0; }
 
+  /* sapling grows taller and fills out canopy across the same stages */
+  #tree-trunk{
+    stroke-dasharray: 38;
+    stroke-dashoffset: 30; /* small sapling visible from the very top of the page */
+    transition: stroke-dashoffset 1s ease;
+  }
+  #tree-canopy-1, #tree-canopy-2{ opacity:0; transition:opacity 0.9s ease; }
+  svg#house.has-stage-1 #tree-trunk{ stroke-dashoffset:20; }
+  svg#house.has-stage-2 #tree-trunk{ stroke-dashoffset:8; }
+  svg#house.has-stage-3 #tree-trunk{ stroke-dashoffset:0; }
+  svg#house.has-stage-3 #tree-canopy-1{ opacity:1; }
+  svg#house.has-stage-4 #tree-canopy-2{ opacity:1; }
+
+  /* person arrives at the ADU once it's built and lit */
+  #stage-person{
+    opacity:0;
+    transform: translateX(-14px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  svg#house.has-stage-4 #stage-person{ opacity:1; transform:translateX(0); }
+
   @media (prefers-reduced-motion: reduce){
-    #stage-pad, #stage-lock, #stage-window-light{ transition:none; }
+    #stage-pad, #stage-lock, #stage-window-light,
+    #tree-trunk, #tree-canopy-1, #tree-canopy-2, #stage-person{
+      transition:none;
+    }
     #stage-adu-outline path, #stage-path path{ transition:none; }
   }
 
@@ -166,18 +190,28 @@
 <div class="layout">
 
   <div class="illustration-col">
-    <svg id="house" viewBox="0 0 300 260" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <svg id="house" viewBox="-25 0 325 260" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
       <!-- ground line -->
-      <line x1="10" y1="220" x2="290" y2="220" stroke="#DDD5C7" stroke-width="2"/>
+      <line x1="-15" y1="220" x2="290" y2="220" stroke="#DDD5C7" stroke-width="2"/>
+
+      <!-- sapling that grows into a tree across the stages -->
+      <g id="tree">
+        <line id="tree-trunk" x1="5" y1="220" x2="5" y2="182" stroke="#2F4C3E" stroke-width="3" stroke-linecap="round"/>
+        <circle id="tree-canopy-1" cx="5" cy="182" r="10" fill="#2F4C3E" opacity="0"/>
+        <circle id="tree-canopy-2" cx="5" cy="172" r="14" fill="#4A6B5A" opacity="0"/>
+      </g>
 
       <!-- main house (always visible) -->
       <g stroke="#22282E" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round">
         <polyline points="40,140 40,220 150,220 150,140"/>
         <polyline points="30,140 95,90 160,140"/>
         <rect x="80" y="175" width="30" height="45" />
-        <rect x="55" y="160" width="24" height="24" />
-        <line x1="67" y1="160" x2="67" y2="184"/>
-        <line x1="55" y1="172" x2="79" y2="172"/>
+        <rect x="50" y="160" width="24" height="24" />
+        <line x1="62" y1="160" x2="62" y2="184"/>
+        <line x1="50" y1="172" x2="74" y2="172"/>
+        <rect x="116" y="160" width="24" height="24" />
+        <line x1="128" y1="160" x2="128" y2="184"/>
+        <line x1="116" y1="172" x2="140" y2="172"/>
       </g>
 
       <!-- ADU foundation pad -->
@@ -203,6 +237,14 @@
       <!-- connecting path between houses -->
       <g id="stage-path" stroke="#5B6470" stroke-width="2" stroke-dasharray="4 4">
         <path d="M150,220 195,220" fill="none"/>
+      </g>
+
+      <!-- person, arrives at the final stage -->
+      <g id="stage-person" stroke="#22282E" stroke-width="2.5" fill="none" stroke-linecap="round">
+        <circle cx="172" cy="203" r="5" fill="none"/>
+        <line x1="172" y1="209" x2="172" y2="220"/>
+        <line x1="172" y1="220" x2="165" y2="225"/>
+        <line x1="172" y1="220" x2="179" y2="225"/>
       </g>
     </svg>
     <p class="illustration-caption">Scroll to see the ADU take shape</p>
@@ -239,7 +281,8 @@
 <script>
   (function(){
     var house = document.getElementById('house');
-    var paragraphs = document.querySelectorAll('article.post-body p[data-stage]');
+    var paragraphs = Array.prototype.slice.call(document.querySelectorAll('article.post-body p[data-stage]'));
+    var maxStage = 4;
     var isMobile = window.matchMedia('(max-width: 860px)').matches;
 
     if (isMobile) {
@@ -248,19 +291,41 @@
       return;
     }
 
-    var observer = new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        if (entry.isIntersecting) {
-          var stage = entry.target.getAttribute('data-stage');
-          if (stage !== '0') {
-            house.classList.add('has-stage-' + stage);
-          }
-          observer.unobserve(entry.target);
-        }
+    // Current stage is always a direct function of scroll position, so scrolling
+    // up past a paragraph's trigger line un-builds that stage, and scrolling back
+    // down re-builds it. Nothing is one-shot.
+    function currentStage(){
+      var triggerY = window.innerHeight * 0.45;
+      var stage = 0;
+      paragraphs.forEach(function(p){
+        var n = parseInt(p.getAttribute('data-stage'), 10);
+        if (n === 0) return;
+        var top = p.getBoundingClientRect().top;
+        if (top <= triggerY && n > stage) stage = n;
       });
-    }, { rootMargin: '-40% 0px -40% 0px', threshold: 0 });
+      return stage;
+    }
 
-    paragraphs.forEach(function(p){ observer.observe(p); });
+    function render(){
+      var stage = currentStage();
+      for (var i = 1; i <= maxStage; i++) {
+        house.classList.toggle('has-stage-' + i, i <= stage);
+      }
+    }
+
+    var ticking = false;
+    function onScroll(){
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function(){
+        render();
+        ticking = false;
+      });
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    render();
   })();
 </script>
 
