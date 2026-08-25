@@ -1,215 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pre-Rating Snapshot Dashboard</title>
-  <style>
-    :root {
-      --bg-page: #f5f4f0;
-      --bg-card: #ffffff;
-      --text-main: #1a1a18;
-      --text-muted: #5f5e5a;
-      --border-light: rgba(0,0,0,0.12);
-      
-      /* Status Colors */
-      --safe-bg: #EAF3DE; --safe-text: #3B6D11; --safe-border: #C6DBAF;
-      --warn-bg: #FAEEDA; --warn-text: #854F0B; --warn-border: #FAC775;
-      --risk-bg: #FCEBEB; --risk-text: #A32D2D; --risk-border: #F7C1C1;
-      
-      --primary: #378ADD;
-      --secondary: #534AB7;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Arlington's ADU rules actually work — Joe for Arlington</title>
+<meta name="description" content="A neutral look at how Arlington's accessory dwelling unit rules work, and how they've changed since 2021.">
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg-page); color: var(--text-main); padding: 2rem; min-height: 100vh; }
-    .dash { max-width: 1000px; margin: 0 auto; }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 
-    /* Header & Select */
-    .hdr { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-    .hdr h2 { font-size: 20px; font-weight: 600; }
-    .garage-select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-light); font-size: 14px; cursor: pointer; }
+<style>
+  :root{
+    --paper:#FAF7F1;
+    --paper-dim:#F2EDE3;
+    --rule:#DDD5C7;
+    --ink:#22282E;
+    --ink-soft:#5B6470;
+    --spruce:#2F4C3E;
+    --spruce-dim:#4A6B5A;
+    --brick:#A23B2E;
+    --max:640px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Public Sans', system-ui, sans-serif;
+    font-size:17px;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--spruce); text-decoration-color:var(--rule); text-underline-offset:3px;}
+  a:hover{color:var(--brick);}
+  a:focus-visible{outline:2px solid var(--brick); outline-offset:3px;}
 
-    /* Grid Layouts */
-    .day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 1.5rem; }
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-    @media (max-width: 800px) { .day-grid { grid-template-columns: repeat(4, 1fr); } .two-col { grid-template-columns: 1fr; } }
+  header.site{border-bottom:1px solid var(--rule);}
+  .site-inner{
+    max-width:1040px; margin:0 auto; padding:22px 24px;
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:12px;
+  }
+  .wordmark{font-family:'Source Serif 4', Georgia, serif; font-weight:700; font-size:1.15rem; color:var(--ink); text-decoration:none;}
+  .wordmark:hover{color:var(--spruce);}
+  nav.site-nav{display:flex; gap:22px; font-size:0.92rem; font-weight:500;}
+  nav.site-nav a{color:var(--ink-soft); text-decoration:none;}
+  nav.site-nav a:hover{color:var(--spruce);}
+  nav.site-nav a[aria-current="page"]{color:var(--ink); border-bottom:2px solid var(--brick); padding-bottom:2px;}
 
-    /* Components */
-    .sl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 12px; }
-    .card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 12px; padding: 1.25rem; }
-    
-    /* Day Cards Status Styling */
-    .day-card { border-radius: 10px; padding: 15px 10px; text-align: center; border: 1px solid var(--border-light); background: var(--bg-card); transition: transform 0.2s; }
-    .day-card.safe { border-color: var(--safe-border); }
-    .day-card.marginal { background: var(--warn-bg); border-color: var(--warn-border); }
-    .day-card.risk { background: var(--risk-bg); border-color: var(--risk-border); }
+  .prototype-note{
+    max-width:1040px; margin:0 auto; padding:14px 24px;
+    font-size:0.85rem; color:var(--ink-soft);
+    border-bottom:1px dashed var(--rule);
+  }
+  .prototype-note a{font-weight:600;}
 
-    .day-ratio { font-size: 24px; font-weight: 700; margin: 5px 0; }
-    .day-card.safe .day-ratio { color: var(--safe-text); }
-    .day-card.marginal .day-ratio { color: var(--warn-text); }
-    .day-card.risk .day-ratio { color: var(--risk-text); }
+  .article-head{max-width:1040px; margin:0 auto; padding:44px 24px 0;}
+  .back-link{font-size:0.88rem; margin-bottom:18px; display:inline-block;}
+  h1.article-title{
+    font-family:'Source Serif 4', Georgia, serif;
+    font-weight:700;
+    font-size:clamp(1.7rem, 4vw, 2.3rem);
+    line-height:1.25;
+    margin:0 0 10px;
+    max-width:20ch;
+  }
+  .byline{font-size:0.9rem; color:var(--ink-soft); margin:0 0 8px;}
 
-    .pill { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-top: 8px; }
-    .pill.pg { background: var(--safe-bg); color: var(--safe-text); }
-    .pill.pa { background: #fff; color: var(--warn-text); border: 1px solid var(--warn-border); }
-    .pill.pr { background: #fff; color: var(--risk-text); border: 1px solid var(--risk-border); }
+  /* ---------- two column layout ---------- */
+  .layout{
+    max-width:1040px;
+    margin:0 auto;
+    padding:20px 24px 100px;
+    display:grid;
+    grid-template-columns: 300px 1fr;
+    gap:48px;
+    align-items:start;
+  }
+  .illustration-col{
+    position:sticky;
+    top:40px;
+  }
+  .illustration-caption{
+    font-family:'Source Serif 4', Georgia, serif;
+    font-style:italic;
+    font-size:0.85rem;
+    color:var(--ink-soft);
+    text-align:center;
+    margin-top:10px;
+  }
 
-    canvas { width: 100% !important; height: 180px !important; }
-    
-    .svc-row { padding: 12px 0; border-bottom: 1px solid var(--border-light); }
-    .svc-row:last-child { border-bottom: none; }
-    .svc-name { font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
-  </style>
+  article.post-body p{margin:0 0 26px; padding-top:2px;}
+  article.post-body p:first-of-type{margin-top:6px;}
+
+  footer.site{border-top:1px solid var(--rule); background:var(--paper-dim);}
+  .footer-inner{
+    max-width:1040px; margin:0 auto; padding:32px 24px;
+    display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between;
+    font-size:0.85rem; color:var(--ink-soft);
+  }
+  .footer-inner nav{display:flex; gap:18px;}
+  .footer-inner nav a{color:var(--ink-soft); text-decoration:none;}
+  .footer-inner nav a:hover{color:var(--spruce);}
+  .disclaimer{max-width:1040px; margin:0 auto; padding:0 24px 28px; font-size:0.78rem; color:var(--ink-soft);}
+
+  /* ---------- SVG house illustration ---------- */
+  svg#house{
+    width:100%;
+    height:auto;
+    overflow:visible;
+  }
+  #stage-pad{ opacity:0; transition:opacity 0.6s ease; }
+  #stage-adu-outline path{
+    stroke-dasharray: 340;
+    stroke-dashoffset: 340;
+    transition: stroke-dashoffset 1s ease;
+  }
+  #stage-lock{ opacity:1; transition:opacity 0.5s ease; }
+  #stage-window-light{ opacity:0; transition:opacity 0.7s ease; }
+  #stage-path path{
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+    transition: stroke-dashoffset 0.8s ease;
+  }
+
+  svg#house.has-stage-1 #stage-pad{ opacity:1; }
+  svg#house.has-stage-2 #stage-adu-outline path{ stroke-dashoffset:0; }
+  svg#house.has-stage-3 #stage-lock{ opacity:0; }
+  svg#house.has-stage-4 #stage-window-light{ opacity:1; }
+  svg#house.has-stage-4 #stage-path path{ stroke-dashoffset:0; }
+
+  @media (prefers-reduced-motion: reduce){
+    #stage-pad, #stage-lock, #stage-window-light{ transition:none; }
+    #stage-adu-outline path, #stage-path path{ transition:none; }
+  }
+
+  @media (max-width:860px){
+    .layout{ grid-template-columns: 1fr; gap:8px; }
+    .illustration-col{ position:static; top:auto; max-width:280px; margin:0 auto 12px; }
+  }
+</style>
 </head>
 <body>
 
-<div class="dash">
-  <div class="hdr">
-    <div>
-      <h2 id="garageTitle">Northside 1 Snapshot</h2>
-      <p style="font-size: 13px; color: var(--text-muted)">Rating 2: Apr 28 – Aug 18, 2025</p>
-    </div>
-    <select class="garage-select" id="garageSelect">
-      <optgroup label="Northside">
-        <option value="Northside 1">Northside 1</option>
-        <option value="Northside 2">Northside 2</option>
-      </optgroup>
-      <optgroup label="Southside">
-        <option value="Southside 1">Southside 1</option>
-        <option value="Southside 2">Southside 2</option>
-      </optgroup>
-    </select>
+<header class="site">
+  <div class="site-inner">
+    <a class="wordmark" href="https://www.joeforarlington.org/index.html">Joe for Arlington</a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="https://www.joeforarlington.org/index.html">Home</a>
+      <a href="https://www.joeforarlington.org/about.html">About Joe</a>
+      <a href="blog.html" aria-current="page">Blog</a>
+      <a href="https://secure.actblue.com/donate/joseph-solomon-1">Donate</a>
+    </nav>
   </div>
+</header>
 
-  <p class="sl">Weekly Staffing Coverage</p>
-  <div class="day-grid" id="dayGrid"></div>
+<p class="prototype-note">Design prototype — testing a scroll-linked illustration for topic posts. Not yet linked from the blog index. <a href="blog.html">Back to blog</a></p>
 
-  <div class="two-col">
-    <div class="card">
-      <p class="sl">Peak Bus Requirements</p>
-      <canvas id="peakChart"></canvas>
-    </div>
-    <div class="card">
-      <p class="sl">Hiring Pipeline (Graduation Weeks)</p>
-      <canvas id="pipelineChart"></canvas>
-    </div>
-  </div>
-
-  <div class="card">
-    <p class="sl">Active Service Changes</p>
-    <div id="svcList"></div>
-  </div>
+<div class="article-head">
+  <h1 class="article-title">How Arlington's ADU rules actually work</h1>
+  <p class="byline">Posted by Joseph Solomon &middot; August 24, 2026</p>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<div class="layout">
+
+  <div class="illustration-col">
+    <svg id="house" viewBox="0 0 300 260" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+      <!-- ground line -->
+      <line x1="10" y1="220" x2="290" y2="220" stroke="#DDD5C7" stroke-width="2"/>
+
+      <!-- main house (always visible) -->
+      <g stroke="#22282E" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round">
+        <polyline points="40,140 40,220 150,220 150,140"/>
+        <polyline points="30,140 95,90 160,140"/>
+        <rect x="80" y="175" width="30" height="45" />
+        <rect x="55" y="160" width="24" height="24" />
+        <line x1="67" y1="160" x2="67" y2="184"/>
+        <line x1="55" y1="172" x2="79" y2="172"/>
+      </g>
+
+      <!-- ADU foundation pad -->
+      <g id="stage-pad">
+        <rect x="195" y="205" width="75" height="15" fill="none" stroke="#5B6470" stroke-width="2" stroke-dasharray="4 4"/>
+      </g>
+
+      <!-- ADU structure outline (draws in) -->
+      <g id="stage-adu-outline" stroke="#2F4C3E" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M195,175 195,220 270,220 270,175 232,150 195,175 Z"/>
+        <rect x="223" y="190" width="18" height="30" />
+      </g>
+
+      <!-- lock icon: owner-occupancy requirement, present then removed -->
+      <g id="stage-lock" stroke="#A23B2E" stroke-width="2.5" fill="none" stroke-linecap="round">
+        <rect x="245" y="163" width="14" height="11" rx="2"/>
+        <path d="M248,163 248,157 a4,4 0 0 1 8,0 v6"/>
+      </g>
+
+      <!-- window light: occupied -->
+      <rect id="stage-window-light" x="250" y="196" width="12" height="12" fill="#A23B2E" opacity="0"/>
+
+      <!-- connecting path between houses -->
+      <g id="stage-path" stroke="#5B6470" stroke-width="2" stroke-dasharray="4 4">
+        <path d="M150,220 195,220" fill="none"/>
+      </g>
+    </svg>
+    <p class="illustration-caption">Scroll to see the ADU take shape</p>
+  </div>
+
+  <article class="post-body">
+
+    <p data-stage="0">If you drive past a single-family home in Arlington with a small cottage tucked in the backyard, there's a good chance it's an ADU &mdash; an accessory dwelling unit. It's one of the more concrete tools the town has for adding housing options, and it's had real momentum here since 2021.</p>
+
+    <p data-stage="1">Arlington's Town Meeting adopted its ADU bylaw in spring 2021, allowing property owners to build a small second unit on the same lot as their house &mdash; attached, detached, or built into existing space &mdash; without the special permit process most additions require. The rule applies to both single-family and two-family lots.</p>
+
+    <p data-stage="2">There are limits. An ADU can't be larger than 900 square feet, or half the size of the main house, whichever is smaller. Short-term rentals aren't allowed, and the ADU has to stay under the same ownership as the main house &mdash; you can't sell it off separately.</p>
+
+    <p data-stage="3">The rules got a little more flexible last year. The state's 2024 Affordable Homes Act requires every Massachusetts city and town to allow ADUs by right, without an owner-occupancy requirement. Arlington's Town Meeting updated the local bylaw in 2025 to match, dropping the old requirement that an owner or relative had to live on the property.</p>
+
+    <p data-stage="4">In 2024, the town partnered with the nonprofit Housing Corporation of Arlington to install an all-electric, modular ADU behind a two-family home &mdash; the first project of its kind here, funded partly through Arlington's Affordable Housing Trust. About a dozen ADUs have gone up since the 2021 bylaw passed, and interest keeps growing. For a family trying to help a parent age in place, or a young adult get a foothold in town, it's a small unit that solves a real problem.</p>
+
+  </article>
+
+</div>
+
+<footer class="site">
+  <div class="footer-inner">
+    <span>joeforarlington (at) gmail (dot) com</span>
+    <nav aria-label="Footer">
+      <a href="https://www.joeforarlington.org/index.html">Home</a>
+      <a href="https://www.joeforarlington.org/about.html">About Joe</a>
+      <a href="https://www.arlingtonma.gov/departments/inspectional-services/accessory-dwelling-units-adus">Town ADU info</a>
+    </nav>
+  </div>
+  <p class="disclaimer">Paid for by the Committee to Elect Joseph Solomon.</p>
+</footer>
 
 <script>
-  let peakChart, pipelineChart;
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  (function(){
+    var house = document.getElementById('house');
+    var paragraphs = document.querySelectorAll('article.post-body p[data-stage]');
+    var isMobile = window.matchMedia('(max-width: 860px)').matches;
 
-  // 1. Data Generator (Makes dropdown work)
-  function getGarageData(garageName) {
-    // Seeded random based on name length so data is "sticky" per garage
-    const seed = garageName.length;
-    const rng = (max, min = 0) => Math.floor(Math.random() * (max - min + 1) + min);
+    if (isMobile) {
+      // On small screens, skip scroll-linking: show the finished illustration once, statically.
+      house.classList.add('has-stage-1','has-stage-2','has-stage-3','has-stage-4');
+      return;
+    }
 
-    return {
-      staffing: days.map(d => {
-        const req = rng(60, 30);
-        const list = rng(req + 10, req - 5);
-        const abs = (rng(15, 8) / 100);
-        const ratio = (list * (1 - abs)) / req;
-        return { day: d, req, list, abs, ratio };
-      }),
-      peaks: days.map(d => ({ am: rng(55, 20), pm: rng(60, 25) })),
-      hiring: [
-        { label: 'Class A', ops: rng(5, 2), start: 0, end: 3 },
-        { label: 'Class B', ops: rng(4, 1), start: 4, end: 7 },
-        { label: 'Class C', ops: rng(6, 3), start: 8, end: 11 }
-      ]
-    };
-  }
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) {
+          var stage = entry.target.getAttribute('data-stage');
+          if (stage !== '0') {
+            house.classList.add('has-stage-' + stage);
+          }
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '-40% 0px -40% 0px', threshold: 0 });
 
-  // 2. Helper for Status
-  const getStatus = (r) => {
-    if (r >= 1.05) return { cls: 'safe', pill: 'pg', lbl: 'Safe' };
-    if (r >= 1.00) return { cls: 'marginal', pill: 'pa', lbl: 'Marginal' };
-    return { cls: 'risk', pill: 'pr', lbl: 'At Risk' };
-  };
-
-  // 3. UI Update Logic
-  function updateDashboard() {
-    const garage = document.getElementById('garageSelect').value;
-    document.getElementById('garageTitle').textContent = `${garage} Snapshot`;
-    const data = getGarageData(garage);
-
-    // Update Grid
-    const grid = document.getElementById('dayGrid');
-    grid.innerHTML = data.staffing.map(d => {
-      const s = getStatus(d.ratio);
-      return `
-        <div class="day-card ${s.cls}">
-          <div style="font-size: 11px; color: var(--text-muted)">${d.day}</div>
-          <div class="day-ratio">${d.ratio.toFixed(2)}</div>
-          <div style="font-size: 10px">${Math.round(d.abs * 100)}% absence</div>
-          <span class="pill ${s.pill}">${s.lbl}</span>
-        </div>`;
-    }).join('');
-
-    // Update Service Changes (Dummy context)
-    document.getElementById('svcList').innerHTML = `
-      <div class="svc-row">
-        <div class="svc-name">Route 101 Expansion <span class="pill pg">Low Impact</span></div>
-        <p style="font-size: 12px; color: var(--text-muted)">Adding ${data.hiring[0].ops} runs to midday service.</p>
-      </div>`;
-
-    renderCharts(data);
-  }
-
-  // 4. Charting Logic
-  function renderCharts(data) {
-    if (peakChart) peakChart.destroy();
-    if (pipelineChart) pipelineChart.destroy();
-
-    // Peak Chart
-    peakChart = new Chart(document.getElementById('peakChart'), {
-      type: 'bar',
-      data: {
-        labels: days,
-        datasets: [
-          { label: 'AM Peak', data: data.peaks.map(p => p.am), backgroundColor: '#378ADD' },
-          { label: 'PM Peak', data: data.peaks.map(p => p.pm), backgroundColor: '#534AB7' }
-        ]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-    });
-
-    // Pipeline Chart (Using floating bars)
-    pipelineChart = new Chart(document.getElementById('pipelineChart'), {
-      type: 'bar',
-      data: {
-        labels: data.hiring.map(h => h.label),
-        datasets: [{
-          data: data.hiring.map(h => [h.start, h.end]),
-          backgroundColor: '#378ADD',
-          borderRadius: 6,
-          borderSkipped: false
-        }]
-      },
-      options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: { x: { title: { display: true, text: 'Weeks from Today', font: { size: 10 } } } }
-      }
-    });
-  }
-
-  // Event Listeners
-  document.getElementById('garageSelect').addEventListener('change', updateDashboard);
-  window.onload = updateDashboard;
+    paragraphs.forEach(function(p){ observer.observe(p); });
+  })();
 </script>
 
 </body>
