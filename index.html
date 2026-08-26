@@ -148,10 +148,12 @@
     stroke-dashoffset: 24; /* short but visible stem from the very top of the page */
     transition: stroke-dashoffset 1s ease;
   }
+  #tree-bud{ opacity:1; transition:opacity 0.6s ease; }
   #tree-canopy-1, #tree-canopy-2{ opacity:0; transition:opacity 0.9s ease; }
   svg#house.has-stage-1 #tree-trunk{ stroke-dashoffset:20; }
   svg#house.has-stage-2 #tree-trunk{ stroke-dashoffset:8; }
   svg#house.has-stage-3 #tree-trunk{ stroke-dashoffset:0; }
+  svg#house.has-stage-3 #tree-bud{ opacity:0; } /* the real canopy takes over from here */
   svg#house.has-stage-3 #tree-canopy-1{ opacity:1; }
   svg#house.has-stage-4 #tree-canopy-2{ opacity:1; }
 
@@ -165,7 +167,7 @@
 
   @media (prefers-reduced-motion: reduce){
     #stage-window-glow, #stage-path,
-    #tree-trunk, #tree-canopy-1, #tree-canopy-2, #stage-person{
+    #tree-trunk, #tree-bud, #tree-canopy-1, #tree-canopy-2, #stage-person{
       transition:none;
     }
     #stage-adu-walls path, #stage-adu-roof path, #stage-adu-openings rect, #stage-adu-openings line{ transition:none; }
@@ -207,7 +209,7 @@
 
       <!-- sapling that grows into a tree across the stages -->
       <g id="tree">
-        <line id="tree-trunk" x1="5" y1="220" x2="5" y2="182" stroke="#2F4C3E" stroke-width="3" stroke-linecap="round"/>
+        <line id="tree-trunk" x1="5" y1="220" x2="5" y2="182" stroke="#7A5A3E" stroke-width="3" stroke-linecap="round"/>
         <circle id="tree-bud" cx="5" cy="208" r="3" fill="#2F4C3E"/>
         <circle id="tree-canopy-1" cx="5" cy="182" r="10" fill="#2F4C3E" opacity="0"/>
         <circle id="tree-canopy-2" cx="5" cy="172" r="14" fill="#4A6B5A" opacity="0"/>
