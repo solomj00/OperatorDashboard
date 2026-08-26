@@ -20,17 +20,7 @@
     --spruce:#2F4C3E;
     --spruce-dim:#4A6B5A;
     --brick:#A23B2E;
-    --wc-paper:#F4ECDA;
-    --wc-ink:#4A3F35;
-    --wc-roof:#C1694B;
-    --wc-wall:#E8D9B5;
-    --wc-adu-wall:#B7C9A8;
-    --wc-door:#8B5E3C;
-    --wc-leaf-1:#6B8F5C;
-    --wc-leaf-2:#8FAE78;
-    --wc-trunk:#7A5A3E;
-    --wc-glow:#F2C572;
-    --wc-ground:#9CAE84;
+    --light-glow:#F4C95D;
     --max:640px;
   }
   *{box-sizing:border-box;}
@@ -92,10 +82,6 @@
   .illustration-col{
     position:sticky;
     top:40px;
-    background:var(--wc-paper);
-    border-radius:8px;
-    padding:16px;
-    box-shadow:0 2px 8px rgba(34,40,46,0.12);
   }
   .illustration-caption{
     font-family:'Source Serif 4', Georgia, serif;
@@ -126,32 +112,33 @@
     height:auto;
     overflow:visible;
   }
-  #stage-pad{ opacity:0; transition:opacity 0.6s ease; }
-  #stage-adu-outline path{
-    stroke-dasharray: 340;
-    stroke-dashoffset: 340;
+  #stage-adu-walls path{
+    stroke-dasharray: 170;
+    stroke-dashoffset: 170;
     transition: stroke-dashoffset 1s ease;
   }
-  #stage-adu-outline rect{
+  #stage-adu-roof path{
+    stroke-dasharray: 95;
+    stroke-dashoffset: 95;
+    transition: stroke-dashoffset 1s ease;
+  }
+  #stage-adu-openings rect{
     stroke-dasharray: 96;
     stroke-dashoffset: 96;
     transition: stroke-dashoffset 1s ease;
   }
-  #stage-adu-outline line{
+  #stage-adu-openings line{
     stroke-dasharray: 16;
     stroke-dashoffset: 16;
     transition: stroke-dashoffset 1s ease;
   }
   #stage-window-glow{ opacity:0; transition:opacity 0.7s ease; }
   #stage-path{ opacity:0; transition:opacity 0.8s ease; }
-  #stage-adu-wash{ opacity:0; transition:opacity 1s ease; }
 
-  svg#house.has-stage-1 #stage-pad{ opacity:1; }
-  svg#house.has-stage-2 #stage-pad{ opacity:0; } /* real walls exist now; the staked-out marker is done */
-  svg#house.has-stage-2 #stage-adu-wash{ opacity:1; }
-  svg#house.has-stage-2 #stage-adu-outline path,
-  svg#house.has-stage-2 #stage-adu-outline rect,
-  svg#house.has-stage-2 #stage-adu-outline line{ stroke-dashoffset:0; }
+  svg#house.has-stage-1 #stage-adu-walls path{ stroke-dashoffset:0; }
+  svg#house.has-stage-2 #stage-adu-roof path{ stroke-dashoffset:0; }
+  svg#house.has-stage-3 #stage-adu-openings rect,
+  svg#house.has-stage-3 #stage-adu-openings line{ stroke-dashoffset:0; }
   svg#house.has-stage-4 #stage-window-glow{ opacity:1; }
   svg#house.has-stage-4 #stage-path{ opacity:1; }
 
@@ -177,11 +164,11 @@
   svg#house.has-stage-4 #stage-person{ opacity:1; transform:translateX(0); }
 
   @media (prefers-reduced-motion: reduce){
-    #stage-pad, #stage-window-glow, #stage-path, #stage-adu-wash,
+    #stage-window-glow, #stage-path,
     #tree-trunk, #tree-canopy-1, #tree-canopy-2, #stage-person{
       transition:none;
     }
-    #stage-adu-outline path, #stage-adu-outline rect, #stage-adu-outline line{ transition:none; }
+    #stage-adu-walls path, #stage-adu-roof path, #stage-adu-openings rect, #stage-adu-openings line{ transition:none; }
   }
 
   @media (max-width:860px){
@@ -215,45 +202,19 @@
 
   <div class="illustration-col">
     <svg id="house" viewBox="-25 0 325 260" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-      <defs>
-        <filter id="wobble" x="-30%" y="-30%" width="160%" height="160%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.02 0.045" numOctaves="2" seed="4" result="n"/>
-          <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"/>
-        </filter>
-        <filter id="wash" x="-60%" y="-60%" width="220%" height="220%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="8" result="n"/>
-          <feDisplacementMap in="SourceGraphic" in2="n" scale="9"/>
-          <feGaussianBlur stdDeviation="1.3"/>
-        </filter>
-        <filter id="grain" x="0" y="0" width="100%" height="100%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="2" result="g"/>
-          <feColorMatrix in="g" type="matrix" values="0 0 0 0 0.30  0 0 0 0 0.24  0 0 0 0 0.16  0 0 0 0.05 0"/>
-        </filter>
-      </defs>
-
-      <!-- paper background -->
-      <rect x="-25" y="0" width="325" height="260" fill="var(--wc-paper)"/>
-      <rect x="-25" y="0" width="325" height="260" filter="url(#grain)"/>
-
-      <!-- ground wash -->
-      <rect x="-25" y="213" width="325" height="12" fill="var(--wc-ground)" opacity="0.4" filter="url(#wash)"/>
-      <line x1="-15" y1="220" x2="290" y2="220" stroke="#7A8768" stroke-width="1.5" opacity="0.55" filter="url(#wobble)"/>
+      <!-- ground line -->
+      <line x1="-15" y1="220" x2="290" y2="220" stroke="#DDD5C7" stroke-width="2"/>
 
       <!-- sapling that grows into a tree across the stages -->
       <g id="tree">
-        <line id="tree-trunk" x1="5" y1="220" x2="5" y2="182" stroke="var(--wc-trunk)" stroke-width="3" stroke-linecap="round" filter="url(#wobble)"/>
-        <circle id="tree-bud" cx="5" cy="208" r="3.5" fill="var(--wc-leaf-1)" opacity="0.85" filter="url(#wash)"/>
-        <circle id="tree-canopy-1" cx="5" cy="182" r="11" fill="var(--wc-leaf-1)" opacity="0" filter="url(#wash)"/>
-        <circle id="tree-canopy-2" cx="4" cy="171" r="15" fill="var(--wc-leaf-2)" opacity="0" filter="url(#wash)"/>
+        <line id="tree-trunk" x1="5" y1="220" x2="5" y2="182" stroke="#2F4C3E" stroke-width="3" stroke-linecap="round"/>
+        <circle id="tree-bud" cx="5" cy="208" r="3" fill="#2F4C3E"/>
+        <circle id="tree-canopy-1" cx="5" cy="182" r="10" fill="#2F4C3E" opacity="0"/>
+        <circle id="tree-canopy-2" cx="5" cy="172" r="14" fill="#4A6B5A" opacity="0"/>
       </g>
 
-      <!-- main house color wash, beneath the linework -->
-      <path d="M40,140 L40,220 L150,220 L150,140 Z" fill="var(--wc-wall)" opacity="0.55" filter="url(#wash)"/>
-      <path d="M30,140 L95,90 L160,140 Z" fill="var(--wc-roof)" opacity="0.5" filter="url(#wash)"/>
-      <rect x="80" y="175" width="30" height="45" fill="var(--wc-door)" opacity="0.45" filter="url(#wash)"/>
-
-      <!-- main house linework (always visible) -->
-      <g stroke="var(--wc-ink)" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round" filter="url(#wobble)">
+      <!-- main house (always visible) -->
+      <g stroke="#22282E" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round">
         <polyline points="40,140 40,220 150,220 150,140"/>
         <polyline points="30,140 95,90 160,140"/>
         <rect x="80" y="175" width="30" height="45" />
@@ -266,7 +227,7 @@
       </g>
 
       <!-- residents already at the main house, visible from the very start -->
-      <g id="residents" stroke="var(--wc-ink)" stroke-width="2.5" fill="none" stroke-linecap="round" filter="url(#wobble)">
+      <g id="residents" stroke="#22282E" stroke-width="2.5" fill="none" stroke-linecap="round">
         <circle cx="88" cy="203" r="5"/>
         <line x1="88" y1="209" x2="88" y2="220"/>
         <line x1="88" y1="220" x2="81" y2="225"/>
@@ -278,23 +239,21 @@
         <line x1="104" y1="220" x2="109" y2="224"/>
       </g>
 
-      <!-- ADU foundation pad: stays crisp and unfiltered, a blueprint mark against the painted scene -->
-      <g id="stage-pad">
-        <rect x="195" y="220" width="75" height="15" fill="none" stroke="#8A8272" stroke-width="2" stroke-dasharray="4 4"/>
+      <!-- ADU: floor and walls draw in first -->
+      <g id="stage-adu-walls" stroke="#2F4C3E" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M195,175 195,220 270,220 270,175"/>
       </g>
 
-      <!-- ADU color wash, appears alongside the outline -->
-      <g id="stage-adu-wash">
-        <path d="M195,175 L195,220 L270,220 L270,175 L232,150 Z" fill="var(--wc-adu-wall)" opacity="0.5" filter="url(#wash)"/>
-        <rect x="223" y="190" width="18" height="30" fill="var(--wc-door)" opacity="0.4" filter="url(#wash)"/>
+      <!-- ADU: roof goes up on top of the walls -->
+      <g id="stage-adu-roof" stroke="#2F4C3E" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M270,175 232,150 195,175"/>
       </g>
 
       <!-- warm glow behind the ADU window panes: occupied -->
-      <circle id="stage-window-glow" cx="256" cy="193" r="9" fill="var(--wc-glow)" opacity="0" filter="url(#wash)"/>
+      <rect id="stage-window-glow" x="250" y="187" width="12" height="12" fill="var(--light-glow)" opacity="0"/>
 
-      <!-- ADU structure outline (draws in), including its own small window -->
-      <g id="stage-adu-outline" stroke="#3F5540" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round" filter="url(#wobble)">
-        <path d="M195,175 195,220 270,220 270,175 232,150 195,175 Z"/>
+      <!-- ADU: door and window go in last, once the shell is up -->
+      <g id="stage-adu-openings" stroke="#2F4C3E" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round">
         <rect x="223" y="190" width="18" height="30" />
         <rect x="248" y="185" width="16" height="16" />
         <line x1="256" y1="185" x2="256" y2="201"/>
@@ -302,12 +261,12 @@
       </g>
 
       <!-- connecting path between houses -->
-      <g id="stage-path" stroke="#7A6A52" stroke-width="2" stroke-dasharray="4 4" filter="url(#wobble)">
+      <g id="stage-path" stroke="#5B6470" stroke-width="2" stroke-dasharray="4 4">
         <path d="M150,220 195,220" fill="none"/>
       </g>
 
       <!-- new arrival at the ADU, appears once it's built and lit -->
-      <g id="stage-person" stroke="var(--wc-ink)" stroke-width="2.5" fill="none" stroke-linecap="round" filter="url(#wobble)">
+      <g id="stage-person" stroke="#22282E" stroke-width="2.5" fill="none" stroke-linecap="round">
         <circle cx="172" cy="203" r="5" fill="none"/>
         <line x1="172" y1="209" x2="172" y2="220"/>
         <line x1="172" y1="220" x2="165" y2="225"/>
